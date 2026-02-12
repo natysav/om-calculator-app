@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import math
+import uuid
+from rate_limiter import RateLimiter
 
 # ==========================================
 # HELPER FUNCTIONS
@@ -64,6 +66,45 @@ week_selection = st.sidebar.selectbox(
 )
 
 # ==========================================
+# RATE LIMITING
+# ==========================================
+
+@st.cache_resource
+def _get_rate_limiter():
+    return RateLimiter(max_requests=100, window_seconds=3600)
+
+_limiter = _get_rate_limiter()
+
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+
+_session_key = st.session_state.session_id
+
+
+def rate_limit_check():
+    """Record request and check rate limit. Returns True if allowed."""
+    if _limiter.is_rate_limited(_session_key):
+        headers = _limiter.get_headers(_session_key)
+        st.error(
+            f"Rate limit exceeded "
+            f"(X-RateLimit-Remaining: {headers['X-RateLimit-Remaining']}). "
+            "Please wait before making more requests."
+        )
+        return False
+    _limiter.record_request(_session_key)
+    return True
+
+
+# Display rate limit headers in sidebar
+_rl_headers = _limiter.get_headers(_session_key)
+st.sidebar.divider()
+st.sidebar.markdown("**Rate Limit**")
+st.sidebar.text(f"X-RateLimit-Remaining: {_rl_headers['X-RateLimit-Remaining']}")
+st.sidebar.text(f"X-RateLimit-Limit: {_rl_headers['X-RateLimit-Limit']}")
+if int(_rl_headers["X-RateLimit-Reset"]) > 0:
+    st.sidebar.text(f"X-RateLimit-Reset: {_rl_headers['X-RateLimit-Reset']}s")
+
+# ==========================================
 # WEEK 1: PROCESS FUNDAMENTALS
 # ==========================================
 if week_selection == "Week 1: Process Fundamentals":
@@ -79,7 +120,7 @@ if week_selection == "Week 1: Process Fundamentals":
         time_val = c2.number_input("Time Taken", value=1.0)
         time_unit = c2.selectbox("Time Unit", ["Minutes", "Hours", "Days"], index=1)
         
-        if st.button("Calculate Flow Rate"):
+        if st.button("Calculate Flow Rate") and rate_limit_check():
             t_mins = to_minutes(time_val, time_unit)
             if t_mins > 0:
                 fr_min = units / t_mins
@@ -95,7 +136,7 @@ if week_selection == "Week 1: Process Fundamentals":
         fr_val = c1.number_input("Flow Rate", value=5.0)
         fr_unit = c1.selectbox("Rate Unit", ["Units/Minute", "Units/Hour", "Units/Day"], index=1)
         
-        if st.button("Calculate Cycle Time"):
+        if st.button("Calculate Cycle Time") and rate_limit_check():
             if fr_unit == "Units/Hour": fr_min = fr_val / 60
             elif fr_unit == "Units/Day": fr_min = fr_val / 1440
             else: fr_min = fr_val
@@ -116,7 +157,7 @@ if week_selection == "Week 1: Process Fundamentals":
             s2 = st.number_input("Step 2 Capacity", value=80.0)
             s3 = st.number_input("Step 3 Capacity", value=120.0)
             
-        if st.button("Find Bottleneck"):
+        if st.button("Find Bottleneck") and rate_limit_check():
             b_neck = min(s1, s2, s3)
             st.success(f"Process Capacity: **{b_neck}** (Limited by the lowest step)")
 
@@ -140,7 +181,7 @@ elif week_selection == "Week 2: Inventory & Little's Law":
             t_unit = st.selectbox("Unit (T)", ["Minutes", "Hours", "Days"], index=1)
         with col3:
             st.markdown("#### Result")
-            if st.button("Calculate Inventory"):
+            if st.button("Calculate Inventory") and rate_limit_check():
                 if r_unit == "Units/Hour": r_norm = r_val / 60
                 elif r_unit == "Units/Day": r_norm = r_val / 1440
                 else: r_norm = r_val
@@ -152,7 +193,7 @@ elif week_selection == "Week 2: Inventory & Little's Law":
         st.subheader("Inventory Turns")
         cogs = st.number_input("Cost of Goods Sold (COGS)", value=1000000.0)
         inv_val = st.number_input("Average Inventory Value", value=100000.0)
-        if st.button("Calculate Turns"):
+        if st.button("Calculate Turns") and rate_limit_check():
             if inv_val > 0:
                 st.metric("Inventory Turns", f"{cogs/inv_val:.2f}")
 
@@ -167,7 +208,7 @@ elif week_selection == "Week 3: Capacity & Labor":
         st.subheader("Cost of Direct Labor")
         wages = st.number_input("Total Wages per Hour ($)", value=60.0)
         fr_hr = st.number_input("Flow Rate (Units/Hour)", value=2.0)
-        if st.button("Calculate Cost"):
+        if st.button("Calculate Cost") and rate_limit_check():
             if fr_hr > 0:
                 st.metric("Direct Labor Cost", f"${wages/fr_hr:.2f} per unit")
 
@@ -175,7 +216,7 @@ elif week_selection == "Week 3: Capacity & Labor":
         st.subheader("Implied Utilization")
         demand = st.number_input("Demand Rate", value=15.0)
         cap = st.number_input("Capacity", value=20.0)
-        if st.button("Calculate Implied Util"):
+        if st.button("Calculate Implied Util") and rate_limit_check():
             if cap > 0:
                 u = demand/cap
                 st.metric("Implied Utilization", f"{u:.2%}")
@@ -183,7 +224,7 @@ elif week_selection == "Week 3: Capacity & Labor":
     with tab3:
         st.subheader("Labor Content")
         times = st.text_input("Task Times (Minutes, comma separated)", "1.0, 0.5, 2.5")
-        if st.button("Sum Labor Content"):
+        if st.button("Sum Labor Content") and rate_limit_check():
             try:
                 t_list = [float(x.strip()) for x in times.split(',')]
                 st.success(f"Total Labor Content: **{sum(t_list):.2f} minutes**")
@@ -205,7 +246,7 @@ elif week_selection == "Week 4: Batches & Setup":
     p_time = c2.number_input("Processing Time (per unit)", value=1.0)
     p_unit = c2.selectbox("Processing Unit", ["Minutes", "Hours"], index=0)
     
-    if st.button("Calculate Batch Capacity"):
+    if st.button("Calculate Batch Capacity") and rate_limit_check():
         s_min = to_minutes(s_time, s_unit)
         p_min = to_minutes(p_time, p_unit)
         denom = s_min + (b_size * p_min)
@@ -244,7 +285,7 @@ elif week_selection == "Week 5: Queuing Theory & Throughput Loss":
         a_min = to_minutes(a_val, a_unit)
         p_min = to_minutes(p_val, p_unit)
             
-        if st.button("Calculate Waiting Time (Tq)"):
+        if st.button("Calculate Waiting Time (Tq)") and rate_limit_check():
             if a_min > 0 and m > 0:
                 util = p_min / (a_min * m)
                 st.metric("Utilization", f"{util:.2%}")
@@ -292,7 +333,7 @@ elif week_selection == "Week 5: Queuing Theory & Throughput Loss":
         with col3:
             m_loss = st.number_input("Number of Servers (m)", value=3, min_value=1, key="loss_m")
 
-        if st.button("Calculate Loss Metrics"):
+        if st.button("Calculate Loss Metrics") and rate_limit_check():
             # 1. Calculate Traffic Intensity (r) = Demand/Hour * ProcessTime/Hour
             # (unitless)
             r = lam * p_hours
