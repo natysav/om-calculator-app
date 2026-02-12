@@ -74,6 +74,8 @@ if week_selection == "Week 1: Process Fundamentals":
     # --- Flow Rate ---
     with tab1:
         st.subheader("Flow Rate Calculator")
+        st.markdown("**Flow Rate** is the number of flow units (e.g., customers, products) that pass through a process per unit of time. It measures the throughput of a process.")
+        st.latex(r"\text{Flow Rate} = \frac{\text{Units Produced}}{\text{Time}}")
         c1, c2 = st.columns(2)
         units = c1.number_input("Units Produced", value=100.0)
         time_val = c2.number_input("Time Taken", value=1.0)
@@ -91,6 +93,8 @@ if week_selection == "Week 1: Process Fundamentals":
     # --- Cycle Time ---
     with tab2:
         st.subheader("Cycle Time Calculator")
+        st.markdown("**Cycle Time** is the average time between consecutive flow units completing the process. It is the inverse of the flow rate.")
+        st.latex(r"\text{Cycle Time} = \frac{1}{\text{Flow Rate}}")
         c1, c2 = st.columns(2)
         fr_val = c1.number_input("Flow Rate", value=5.0)
         fr_unit = c1.selectbox("Rate Unit", ["Units/Minute", "Units/Hour", "Units/Day"], index=1)
@@ -109,6 +113,8 @@ if week_selection == "Week 1: Process Fundamentals":
     # --- Process Capacity ---
     with tab3:
         st.subheader("Process Capacity (Bottleneck)")
+        st.markdown("**Process Capacity** is determined by the **bottleneck** — the step with the lowest capacity. The bottleneck limits the overall throughput of the entire process.")
+        st.latex(r"\text{Process Capacity} = \min(\text{Capacity}_1,\; \text{Capacity}_2,\; \dots,\; \text{Capacity}_n)")
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("**Enter capacities for up to 3 steps:**")
@@ -129,7 +135,9 @@ elif week_selection == "Week 2: Inventory & Little's Law":
 
     with tab1:
         st.subheader("Little's Law")
+        st.markdown("**Little's Law** links the three fundamental process metrics. The average number of flow units in the system (Inventory) equals the flow rate multiplied by the average flow time. It holds for any stable process.")
         st.latex(r"I = R \times T")
+        st.markdown("Where **I** = Inventory (units in process), **R** = Flow Rate (throughput), **T** = Flow Time (time a unit spends in the system).")
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -150,6 +158,8 @@ elif week_selection == "Week 2: Inventory & Little's Law":
 
     with tab2:
         st.subheader("Inventory Turns")
+        st.markdown("**Inventory Turns** measures how many times a company's inventory is sold and replaced over a period. Higher turns indicate more efficient inventory management.")
+        st.latex(r"\text{Inventory Turns} = \frac{\text{COGS}}{\text{Average Inventory Value}}")
         cogs = st.number_input("Cost of Goods Sold (COGS)", value=1000000.0)
         inv_val = st.number_input("Average Inventory Value", value=100000.0)
         if st.button("Calculate Turns"):
@@ -165,6 +175,8 @@ elif week_selection == "Week 3: Capacity & Labor":
 
     with tab1:
         st.subheader("Cost of Direct Labor")
+        st.markdown("**Cost of Direct Labor** is the labor expense incurred to produce one flow unit. It is calculated by dividing total wages by the flow rate.")
+        st.latex(r"\text{Cost of Direct Labor} = \frac{\text{Total Wages per Hour}}{\text{Flow Rate (units/hour)}}")
         wages = st.number_input("Total Wages per Hour ($)", value=60.0)
         fr_hr = st.number_input("Flow Rate (Units/Hour)", value=2.0)
         if st.button("Calculate Cost"):
@@ -173,6 +185,8 @@ elif week_selection == "Week 3: Capacity & Labor":
 
     with tab2:
         st.subheader("Implied Utilization")
+        st.markdown("**Implied Utilization** is the ratio of demand to capacity. If it exceeds 100%, the resource is a bottleneck and cannot meet demand.")
+        st.latex(r"\text{Implied Utilization} = \frac{\text{Demand}}{\text{Capacity}}")
         demand = st.number_input("Demand Rate", value=15.0)
         cap = st.number_input("Capacity", value=20.0)
         if st.button("Calculate Implied Util"):
@@ -182,6 +196,8 @@ elif week_selection == "Week 3: Capacity & Labor":
 
     with tab3:
         st.subheader("Labor Content")
+        st.markdown("**Labor Content** is the total amount of labor time required to produce one flow unit. It is the sum of all individual activity times across workers.")
+        st.latex(r"\text{Labor Content} = \sum_{i=1}^{n} \text{Activity Time}_i")
         times = st.text_input("Task Times (Minutes, comma separated)", "1.0, 0.5, 2.5")
         if st.button("Sum Labor Content"):
             try:
@@ -196,7 +212,9 @@ elif week_selection == "Week 3: Capacity & Labor":
 elif week_selection == "Week 4: Batches & Setup":
     st.header("Week 4: Batches & Setup")
     st.subheader("Capacity with Batching")
-    
+    st.markdown("**Capacity with Batching** accounts for the setup time incurred each time a new batch is started. Larger batches spread the fixed setup cost over more units, increasing effective capacity.")
+    st.latex(r"\text{Capacity} = \frac{\text{Batch Size}}{\text{Setup Time} + \text{Batch Size} \times \text{Processing Time per Unit}}")
+
     c1, c2 = st.columns(2)
     b_size = c1.number_input("Batch Size", value=10.0)
     s_time = c1.number_input("Setup Time (per batch)", value=10.0)
@@ -224,8 +242,13 @@ elif week_selection == "Week 5: Queuing Theory & Throughput Loss":
     # --- Standard Queue (G/G/m) ---
     with tab_queue:
         st.subheader("Standard Queue (G/G/m)")
-        st.caption("Use when customers WAIT in line (e.g., Call center).")
-        
+        st.markdown("**Waiting Time in Queue** estimates how long a customer waits before being served, using the G/G/m approximation. Use when customers **wait in line** (e.g., call centers, checkout lines).")
+        st.latex(r"T_q = \frac{p}{m} \;\times\; \frac{u^{\sqrt{2(m+1)}-1}}{1-u} \;\times\; \frac{CV_a^2 + CV_p^2}{2}")
+        st.markdown("""
+Where: **p** = processing time, **m** = number of servers, **u** = utilization (*p / (a × m)*),
+**a** = interarrival time, **CV_a** = coefficient of variation of arrivals, **CV_p** = coefficient of variation of processing.
+""")
+
         col_in1, col_in2, col_in3 = st.columns(3)
         with col_in1:
             m = st.number_input("Number of Servers (m)", min_value=1, value=2)
@@ -262,7 +285,14 @@ elif week_selection == "Week 5: Queuing Theory & Throughput Loss":
     # --- Throughput Loss (Erlang Loss) ---
     with tab_loss:
         st.subheader("Throughput Loss (Erlang Loss)")
-        st.caption("Use when there is **NO Waiting Room** (e.g., Ambulance diversion). Matches 'Calculator.csv'.")
+        st.markdown("**Erlang Loss Model** applies when there is **no waiting room** — arriving customers who find all servers busy are lost (e.g., ambulance diversion, hotel overbooking). It calculates the probability that an arriving customer is turned away.")
+        st.latex(r"r = \lambda \times p \qquad \text{(Traffic Intensity)}")
+        st.latex(r"B(m, r) = \frac{r \cdot B(m-1,\, r)}{m + r \cdot B(m-1,\, r)}, \quad B(0,r)=1")
+        st.markdown("""
+Where: **r** = traffic intensity, **λ** = arrival rate (1/a), **p** = processing time,
+**m** = number of servers, **B(m, r)** = probability of loss (all servers busy).
+""")
+        st.caption("Use when there is **NO Waiting Room** (e.g., Ambulance diversion).")
 
         # Input Method Selection
         input_method = st.radio("Select Input Method:", ["Interarrival Time (a)", "Demand Rate (1/a)"], horizontal=True)
