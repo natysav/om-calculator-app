@@ -262,16 +262,25 @@ Where: **p** = processing time, **m** = number of servers, **u** = utilization (
         with col_in3:
             cv_a = st.number_input("CV of Arrivals (CVa)", value=1.0)
             cv_p = st.number_input("CV of Process (CVp)", value=0.5)
-            
+
+        st.divider()
+        st.markdown("**Willingness to Wait** *(optional)*: Maximum time a customer is willing to wait before leaving.")
+        col_w1, col_w2 = st.columns(2)
+        with col_w1:
+            wait_willing = st.number_input("Willingness to Wait", value=0.0, min_value=0.0, key="q_w")
+        with col_w2:
+            wait_unit = st.selectbox("Unit", ["Seconds", "Minutes", "Hours"], index=1, key="q_w_unit")
+
         # Normalize to Minutes
         a_min = to_minutes(a_val, a_unit)
         p_min = to_minutes(p_val, p_unit)
-            
+        w_min = to_minutes(wait_willing, wait_unit)
+
         if st.button("Calculate Waiting Time (Tq)"):
             if a_min > 0 and m > 0:
                 util = p_min / (a_min * m)
                 st.metric("Utilization", f"{util:.2%}")
-                
+
                 if util >= 1.0:
                     st.error("⚠️ System Unstable (u ≥ 100%)")
                 elif util > 0:
@@ -281,6 +290,37 @@ Where: **p** = processing time, **m** = number of servers, **u** = utilization (
                     term3 = (cv_a**2 + cv_p**2) / 2
                     tq = term1 * term2 * term3
                     st.success(f"Avg Waiting Time: **{tq:.2f} mins**")
+
+                    # Willingness to Wait analysis
+                    if w_min > 0:
+                        st.divider()
+                        st.markdown("### Willingness to Wait Analysis")
+                        if tq <= w_min:
+                            st.success(f"Avg wait ({tq:.2f} min) is **within** customer patience ({w_min:.2f} min).")
+                        else:
+                            st.warning(
+                                f"Avg wait ({tq:.2f} min) **exceeds** customer patience ({w_min:.2f} min) "
+                                f"by {tq - w_min:.2f} min. Customers are likely leaving — consider adding servers or reducing variability."
+                            )
+
+                        # Find minimum servers to bring Tq ≤ willingness
+                        min_m = m
+                        for try_m in range(m, m + 100):
+                            try_util = p_min / (a_min * try_m)
+                            if try_util >= 1.0:
+                                continue
+                            t1 = p_min / try_m
+                            exp = math.sqrt(2 * (try_m + 1)) - 1
+                            t2 = (try_util ** exp) / (1 - try_util)
+                            try_tq = t1 * t2 * term3
+                            if try_tq <= w_min:
+                                min_m = try_m
+                                break
+
+                        if min_m > m:
+                            st.info(f"Minimum servers needed to meet patience threshold: **{min_m}** (currently {m}).")
+                        else:
+                            st.info(f"Current server count ({m}) already meets the patience threshold.")
 
     # --- Throughput Loss (Erlang Loss) ---
     with tab_loss:
