@@ -282,7 +282,25 @@ Where: **p** = processing time, **m** = number of servers, **u** = utilization (
                 st.metric("Utilization", f"{util:.2%}")
 
                 if util >= 1.0:
-                    st.error("⚠️ System Unstable (u ≥ 100%)")
+                    st.error(
+                        "⚠️ System Unstable (u ≥ 100%) — demand exceeds capacity. "
+                        "The queue grows without bound, so waiting time → ∞. "
+                        "Customers with finite patience will leave — use the **Throughput Loss (Erlang Loss)** tab to model this."
+                    )
+                    if w_min > 0:
+                        # Find minimum servers to make system stable AND meet patience
+                        for try_m in range(m, m + 100):
+                            try_util = p_min / (a_min * try_m)
+                            if try_util >= 1.0:
+                                continue
+                            t1 = p_min / try_m
+                            exp = math.sqrt(2 * (try_m + 1)) - 1
+                            t2 = (try_util ** exp) / (1 - try_util)
+                            t3 = (cv_a**2 + cv_p**2) / 2
+                            try_tq = t1 * t2 * t3
+                            if try_tq <= w_min:
+                                st.info(f"Minimum servers needed to stabilize **and** meet patience threshold ({w_min:.2f} min): **{try_m}** (currently {m}).")
+                                break
                 elif util > 0:
                     term1 = p_min / m
                     exponent = math.sqrt(2 * (m + 1)) - 1
