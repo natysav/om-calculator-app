@@ -237,7 +237,7 @@ elif week_selection == "Week 4: Batches & Setup":
 # ==========================================
 elif week_selection == "Week 5: Queuing Theory & Throughput Loss":
     st.header("Week 5: Queuing & Capacity")
-    tab_queue, tab_loss = st.tabs(["Waiting Time (Queue)", "Throughput Loss (Erlang Loss)"])
+    tab_queue, tab_loss, tab_abandon = st.tabs(["Waiting Time (Queue)", "Throughput Loss (Erlang Loss)", "Adjusted Wait (Willingness to Wait)"])
 
     # --- Standard Queue (G/G/m) ---
     with tab_queue:
@@ -263,18 +263,9 @@ Where: **p** = processing time, **m** = number of servers, **u** = utilization (
             cv_a = st.number_input("CV of Arrivals (CVa)", value=1.0)
             cv_p = st.number_input("CV of Process (CVp)", value=0.5)
 
-        st.divider()
-        st.markdown("**Willingness to Wait** *(optional)*: Maximum time a customer is willing to wait before leaving.")
-        col_w1, col_w2 = st.columns(2)
-        with col_w1:
-            wait_willing = st.number_input("Willingness to Wait", value=0.0, min_value=0.0, key="q_w")
-        with col_w2:
-            wait_unit = st.selectbox("Unit", ["Seconds", "Minutes", "Hours"], index=1, key="q_w_unit")
-
         # Normalize to Minutes
         a_min = to_minutes(a_val, a_unit)
         p_min = to_minutes(p_val, p_unit)
-        w_min = to_minutes(wait_willing, wait_unit)
 
         if st.button("Calculate Waiting Time (Tq)"):
             if a_min > 0 and m > 0:
@@ -287,20 +278,6 @@ Where: **p** = processing time, **m** = number of servers, **u** = utilization (
                         "The queue grows without bound, so waiting time → ∞. "
                         "Customers with finite patience will leave — use the **Throughput Loss (Erlang Loss)** tab to model this."
                     )
-                    if w_min > 0:
-                        # Find minimum servers to make system stable AND meet patience
-                        for try_m in range(m, m + 100):
-                            try_util = p_min / (a_min * try_m)
-                            if try_util >= 1.0:
-                                continue
-                            t1 = p_min / try_m
-                            exp = math.sqrt(2 * (try_m + 1)) - 1
-                            t2 = (try_util ** exp) / (1 - try_util)
-                            t3 = (cv_a**2 + cv_p**2) / 2
-                            try_tq = t1 * t2 * t3
-                            if try_tq <= w_min:
-                                st.info(f"Minimum servers needed to stabilize **and** meet patience threshold ({w_min:.2f} min): **{try_m}** (currently {m}).")
-                                break
                 elif util > 0:
                     term1 = p_min / m
                     exponent = math.sqrt(2 * (m + 1)) - 1
@@ -308,37 +285,6 @@ Where: **p** = processing time, **m** = number of servers, **u** = utilization (
                     term3 = (cv_a**2 + cv_p**2) / 2
                     tq = term1 * term2 * term3
                     st.success(f"Avg Waiting Time: **{tq:.2f} mins**")
-
-                    # Willingness to Wait analysis
-                    if w_min > 0:
-                        st.divider()
-                        st.markdown("### Willingness to Wait Analysis")
-                        if tq <= w_min:
-                            st.success(f"Avg wait ({tq:.2f} min) is **within** customer patience ({w_min:.2f} min).")
-                        else:
-                            st.warning(
-                                f"Avg wait ({tq:.2f} min) **exceeds** customer patience ({w_min:.2f} min) "
-                                f"by {tq - w_min:.2f} min. Customers are likely leaving — consider adding servers or reducing variability."
-                            )
-
-                        # Find minimum servers to bring Tq ≤ willingness
-                        min_m = m
-                        for try_m in range(m, m + 100):
-                            try_util = p_min / (a_min * try_m)
-                            if try_util >= 1.0:
-                                continue
-                            t1 = p_min / try_m
-                            exp = math.sqrt(2 * (try_m + 1)) - 1
-                            t2 = (try_util ** exp) / (1 - try_util)
-                            try_tq = t1 * t2 * term3
-                            if try_tq <= w_min:
-                                min_m = try_m
-                                break
-
-                        if min_m > m:
-                            st.info(f"Minimum servers needed to meet patience threshold: **{min_m}** (currently {m}).")
-                        else:
-                            st.info(f"Current server count ({m}) already meets the patience threshold.")
 
     # --- Throughput Loss (Erlang Loss) ---
     with tab_loss:
@@ -422,7 +368,162 @@ Where: **r** = traffic intensity, **λ** = arrival rate (1/a), **p** = processin
             # Table
             st.subheader("Calculation Table")
             st.dataframe(df_table.style.format({
-                "P(Loss) %": "{:.2f}%", 
-                "P(Loss) Factor": "{:.6f}", 
+                "P(Loss) %": "{:.2f}%",
+                "P(Loss) Factor": "{:.6f}",
                 "Traffic Intensity (r)": "{:.4f}"
             }))
+
+    # --- Adjusted Wait (Willingness to Wait) ---
+    with tab_abandon:
+        st.subheader("Adjusted Wait Time (with Customer Abandonment)")
+        st.markdown(
+            "The **Waiting Time (Queue)** tab assumes all customers wait indefinitely. "
+            "The **Erlang Loss** tab assumes no one waits at all. "
+            "Reality is in between: customers wait up to a limit, then leave. "
+            "When impatient customers leave, the queue shrinks, reducing wait for those who stay."
+        )
+        st.markdown(
+            "This calculator iteratively adjusts the effective arrival rate to find the "
+            "**equilibrium waiting time** — the point where the fraction of customers "
+            "abandoning is consistent with the resulting queue length."
+        )
+
+        col_a1, col_a2, col_a3 = st.columns(3)
+        with col_a1:
+            m_adj = st.number_input("Number of Servers (m)", min_value=1, value=2, key="adj_m")
+            a_adj_val = st.number_input("Interarrival Time (a)", value=5.0, key="adj_a")
+            a_adj_unit = st.selectbox("Unit (a)", ["Seconds", "Minutes", "Hours"], index=1, key="adj_a_unit")
+
+        with col_a2:
+            p_adj_val = st.number_input("Processing Time (p)", value=6.0, key="adj_p")
+            p_adj_unit = st.selectbox("Unit (p)", ["Seconds", "Minutes", "Hours"], index=1, key="adj_p_unit")
+
+        with col_a3:
+            cv_a_adj = st.number_input("CV of Arrivals (CVa)", value=1.0, key="adj_cva")
+            cv_p_adj = st.number_input("CV of Process (CVp)", value=0.5, key="adj_cvp")
+
+        st.divider()
+        col_w1, col_w2 = st.columns(2)
+        with col_w1:
+            w_val = st.number_input("Willingness to Wait (W)", value=5.0, min_value=0.01, key="adj_w")
+        with col_w2:
+            w_unit = st.selectbox("Unit (W)", ["Seconds", "Minutes", "Hours"], index=1, key="adj_w_unit")
+
+        a_adj_min = to_minutes(a_adj_val, a_adj_unit)
+        p_adj_min = to_minutes(p_adj_val, p_adj_unit)
+        w_adj_min = to_minutes(w_val, w_unit)
+
+        if st.button("Calculate Adjusted Wait"):
+            if a_adj_min > 0 and m_adj > 0 and w_adj_min > 0:
+                var_term = (cv_a_adj**2 + cv_p_adj**2) / 2
+                exp_val = math.sqrt(2 * (m_adj + 1)) - 1
+
+                # Step 1: Unadjusted Tq (full demand, everyone waits)
+                util_full = p_adj_min / (a_adj_min * m_adj)
+
+                if util_full <= 0:
+                    st.info("No demand — waiting time is 0.")
+                elif util_full >= 1.0:
+                    st.error(
+                        f"⚠️ System unstable at full demand (u = {util_full:.2%}). "
+                        "Queue grows without bound — all customers with finite patience will leave."
+                    )
+                    st.markdown("Iterating to find the equilibrium with abandonment...")
+
+                    # Even with u>=1, abandonment can stabilize the system
+                    a_eff = a_adj_min
+                    tq_adj = None
+                    frac_abandon = 0.0
+                    for i in range(200):
+                        # Increase effective interarrival time (fewer customers)
+                        # Start by assuming some leave, which lowers utilization
+                        if i == 0:
+                            # Initial guess: enough leave to bring util to 0.95
+                            frac_abandon = max(0, 1 - (0.95 * a_adj_min * m_adj / p_adj_min))
+                        a_eff = a_adj_min / (1 - frac_abandon) if frac_abandon < 1 else a_adj_min * 100
+                        u_eff = p_adj_min / (a_eff * m_adj)
+                        if u_eff >= 1.0:
+                            frac_abandon = min(frac_abandon + 0.01, 0.99)
+                            continue
+                        t1 = p_adj_min / m_adj
+                        t2 = (u_eff ** exp_val) / (1 - u_eff)
+                        tq_iter = t1 * t2 * var_term
+                        new_frac = math.exp(-w_adj_min / tq_iter) if tq_iter > 0 else 0
+                        if abs(new_frac - frac_abandon) < 0.0001:
+                            tq_adj = tq_iter
+                            frac_abandon = new_frac
+                            break
+                        frac_abandon = frac_abandon * 0.7 + new_frac * 0.3
+                    else:
+                        # Use last values if didn't fully converge
+                        tq_adj = tq_iter
+                        frac_abandon = new_frac
+
+                    if tq_adj is not None:
+                        u_eff_final = p_adj_min / (a_eff * m_adj)
+                        st.divider()
+                        st.markdown("### Equilibrium Results")
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Adjusted Waiting Time", f"{tq_adj:.2f} min")
+                        c2.metric("Customers Abandoning", f"{frac_abandon:.2%}")
+                        c3.metric("Effective Utilization", f"{u_eff_final:.2%}")
+
+                        demand_per_min = 1 / a_adj_min
+                        served_per_min = demand_per_min * (1 - frac_abandon)
+                        lost_per_min = demand_per_min * frac_abandon
+                        st.divider()
+                        cr1, cr2 = st.columns(2)
+                        cr1.metric("Customers Served", f"{served_per_min * 60:.2f} / hr")
+                        cr2.metric("Customers Lost", f"{lost_per_min * 60:.2f} / hr")
+                else:
+                    # System is stable — compute unadjusted Tq first
+                    t1_full = p_adj_min / m_adj
+                    t2_full = (util_full ** exp_val) / (1 - util_full)
+                    tq_full = t1_full * t2_full * var_term
+
+                    st.markdown("### Unadjusted (all customers wait)")
+                    c1, c2 = st.columns(2)
+                    c1.metric("Utilization", f"{util_full:.2%}")
+                    c2.metric("Avg Waiting Time (Tq)", f"{tq_full:.2f} min")
+
+                    if tq_full <= w_adj_min:
+                        st.success(
+                            f"Avg wait ({tq_full:.2f} min) is already within patience ({w_adj_min:.2f} min). "
+                            "Minimal abandonment expected — the standard G/G/m result applies."
+                        )
+                    else:
+                        st.warning(f"Avg wait ({tq_full:.2f} min) exceeds patience ({w_adj_min:.2f} min). Iterating to find equilibrium...")
+
+                        # Iterative adjustment
+                        a_eff = a_adj_min
+                        frac_abandon = 0.0
+                        tq_adj = tq_full
+                        for i in range(200):
+                            new_frac = math.exp(-w_adj_min / tq_adj) if tq_adj > 0 else 0
+                            if abs(new_frac - frac_abandon) < 0.0001:
+                                frac_abandon = new_frac
+                                break
+                            frac_abandon = frac_abandon * 0.7 + new_frac * 0.3
+                            a_eff = a_adj_min / (1 - frac_abandon) if frac_abandon < 1 else a_adj_min * 100
+                            u_eff = p_adj_min / (a_eff * m_adj)
+                            if u_eff >= 1.0:
+                                continue
+                            t1 = p_adj_min / m_adj
+                            t2 = (u_eff ** exp_val) / (1 - u_eff)
+                            tq_adj = t1 * t2 * var_term
+
+                        u_eff_final = p_adj_min / (a_eff * m_adj)
+                        st.divider()
+                        st.markdown("### Equilibrium Results (after abandonment)")
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Adjusted Waiting Time", f"{tq_adj:.2f} min")
+                        c2.metric("Customers Abandoning", f"{frac_abandon:.2%}")
+                        c3.metric("Effective Utilization", f"{u_eff_final:.2%}")
+
+                        demand_per_min = 1 / a_adj_min
+                        served_per_min = demand_per_min * (1 - frac_abandon)
+                        lost_per_min = demand_per_min * frac_abandon
+                        st.divider()
+                        cr1, cr2 = st.columns(2)
+                        cr1.metric("Customers Served", f"{served_per_min * 60:.2f} / hr")
+                        cr2.metric("Customers Lost", f"{lost_per_min * 60:.2f} / hr")
