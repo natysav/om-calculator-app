@@ -171,7 +171,7 @@ elif week_selection == "Week 2: Inventory & Little's Law":
 # ==========================================
 elif week_selection == "Week 3: Capacity & Labor":
     st.header("Week 3: Capacity & Labor")
-    tab1, tab2, tab3 = st.tabs(["Labor Cost", "Implied Utilization", "Labor Content"])
+    tab1, tab2, tab_util, tab3 = st.tabs(["Labor Cost", "Implied Utilization", "Utilization", "Labor Content"])
 
     with tab1:
         st.subheader("Cost of Direct Labor")
@@ -193,6 +193,19 @@ elif week_selection == "Week 3: Capacity & Labor":
             if cap > 0:
                 u = demand/cap
                 st.metric("Implied Utilization", f"{u:.2%}")
+
+    with tab_util:
+        st.subheader("Utilization")
+        st.markdown("**Utilization** is the fraction of capacity actually being used. Unlike implied utilization (which uses demand), this uses the **actual flow rate**.")
+        st.latex(r"\text{Utilization} = \frac{\text{Flow Rate}}{\text{Capacity}}")
+        flow_rate_u = st.number_input("Flow Rate", value=12.0, key="util_fr")
+        capacity_u = st.number_input("Capacity", value=20.0, key="util_cap")
+        if st.button("Calculate Utilization"):
+            if capacity_u > 0:
+                utilization = flow_rate_u / capacity_u
+                st.metric("Utilization", f"{utilization:.2%}")
+                if utilization > 1.0:
+                    st.warning("Utilization exceeds 100% — flow rate cannot sustainably exceed capacity.")
 
     with tab3:
         st.subheader("Labor Content")
