@@ -59,7 +59,8 @@ week_selection = st.sidebar.selectbox(
         "Week 2: Inventory & Little's Law",
         "Week 3: Capacity & Labor",
         "Week 4: Batches & Setup",
-        "Week 5: Queuing Theory & Throughput Loss"
+        "Week 5: Queuing Theory & Throughput Loss",
+        "Week 6: Process Quality & Takt Time"
     ]
 )
 
@@ -540,3 +541,170 @@ Where: **r** = traffic intensity, **λ** = arrival rate (1/a), **p** = processin
                         cr1, cr2 = st.columns(2)
                         cr1.metric("Customers Served", f"{served_per_min * 60:.2f} / hr")
                         cr2.metric("Customers Lost", f"{lost_per_min * 60:.2f} / hr")
+
+# ==========================================
+# WEEK 6: PROCESS QUALITY & TAKT TIME
+# ==========================================
+elif week_selection == "Week 6: Process Quality & Takt Time":
+    st.header("Week 6: Process Quality & Takt Time")
+    tab_cap, tab_takt, tab_lost = st.tabs(["Process Capability (k-sigma)", "Takt Time", "Customer Lost Rate"])
+
+    # --- Process Capability (k-sigma) ---
+    with tab_cap:
+        st.subheader("Process Capability (k-sigma)")
+        st.markdown(
+            "A process is **capable** if it delivers the quality demanded by the customer. "
+            "A process is said to be **k-sigma** if the distance between the distribution mean "
+            "and both specification limits (USL and LSL) is at least *k* times the process standard deviation."
+        )
+        st.latex(r"k = \min\!\left(\frac{\text{USL} - \mu}{\sigma},\; \frac{\mu - \text{LSL}}{\sigma}\right)")
+        st.markdown(
+            "Where: **USL** = Upper Specification Limit, **LSL** = Lower Specification Limit, "
+            "**μ** = process mean, **σ** = process standard deviation."
+        )
+        st.markdown(
+            "A higher *k* means the process is more capable. "
+            "Common targets: **3-sigma** (99.73% within limits) or **6-sigma** (99.99966% within limits)."
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            mean_val = st.number_input("Process Mean (μ)", value=50.0, key="cap_mean")
+            sigma_val = st.number_input("Standard Deviation (σ)", value=2.0, min_value=0.001, key="cap_sigma")
+        with col2:
+            usl = st.number_input("Upper Specification Limit (USL)", value=56.0, key="cap_usl")
+            lsl = st.number_input("Lower Specification Limit (LSL)", value=44.0, key="cap_lsl")
+
+        if st.button("Calculate Process Capability"):
+            if sigma_val > 0 and usl > lsl:
+                k_upper = (usl - mean_val) / sigma_val
+                k_lower = (mean_val - lsl) / sigma_val
+                k_value = min(k_upper, k_lower)
+
+                st.divider()
+                c1, c2, c3 = st.columns(3)
+                c1.metric("k (sigma level)", f"{k_value:.2f}")
+                c2.metric("Distance to USL", f"{k_upper:.2f}σ")
+                c3.metric("Distance to LSL", f"{k_lower:.2f}σ")
+
+                # Cp and Cpk
+                cp = (usl - lsl) / (6 * sigma_val)
+                cpk = k_value / 3
+
+                st.divider()
+                cp1, cp2 = st.columns(2)
+                cp1.metric("Cp (Process Capability)", f"{cp:.4f}", help="(USL - LSL) / 6σ — measures spread relative to spec width")
+                cp2.metric("Cpk (Centered Capability)", f"{cpk:.4f}", help="k / 3 — accounts for how centered the process is")
+
+                if k_value >= 6:
+                    st.success(f"Process is **{k_value:.1f}-sigma** — Six Sigma level or better. Extremely capable.")
+                elif k_value >= 3:
+                    st.success(f"Process is **{k_value:.1f}-sigma** — capable (at least 3-sigma).")
+                elif k_value >= 1:
+                    st.warning(f"Process is **{k_value:.1f}-sigma** — marginally capable. Some defects expected.")
+                else:
+                    st.error(f"Process is **{k_value:.1f}-sigma** — NOT capable. Significant output falls outside specification limits.")
+
+                if k_upper < 0 or k_lower < 0:
+                    st.error("The process mean is outside the specification limits!")
+            elif usl <= lsl:
+                st.error("USL must be greater than LSL.")
+            else:
+                st.error("Standard deviation must be greater than 0.")
+
+    # --- Takt Time ---
+    with tab_takt:
+        st.subheader("Takt Time Calculator")
+        st.markdown(
+            "**Takt Time** is the rate at which you need to complete a product to meet customer demand. "
+            "It is the total available production time divided by the quantity of product demanded. "
+            "Takt time sets the pace of a **pull system** — production is driven by actual demand rather than forecasts."
+        )
+        st.latex(r"\text{Takt Time} = \frac{\text{Available Production Time}}{\text{Customer Demand}}")
+        st.markdown(
+            "Where: **Available Production Time** = total working time in a period (e.g., minutes per day), "
+            "**Customer Demand** = number of units required in the same period."
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            avail_time = st.number_input("Available Production Time", value=480.0, key="takt_time")
+            time_unit_takt = st.selectbox("Time Unit", ["Minutes", "Hours", "Days"], index=0, key="takt_time_unit")
+        with col2:
+            demand_takt = st.number_input("Customer Demand (units in same period)", value=240.0, min_value=0.01, key="takt_demand")
+
+        n_workers = st.number_input("Number of Workers (optional, for cycle time comparison)", value=1, min_value=1, key="takt_workers")
+
+        if st.button("Calculate Takt Time"):
+            avail_min = to_minutes(avail_time, time_unit_takt)
+            if avail_min > 0 and demand_takt > 0:
+                takt = avail_min / demand_takt
+                st.divider()
+                c1, c2 = st.columns(2)
+                c1.metric("Takt Time", f"{takt:.4f} min/unit")
+                c2.metric("Takt Time", f"{takt * 60:.2f} sec/unit")
+
+                st.info(
+                    f"To meet demand, one unit must be completed every **{takt:.2f} minutes** "
+                    f"({takt * 60:.1f} seconds)."
+                )
+
+                if n_workers > 1:
+                    effective_takt = takt * n_workers
+                    st.metric("Effective Time per Worker", f"{effective_takt:.4f} min/unit",
+                              help="Each worker has this much time per unit if work is balanced across workers")
+            else:
+                st.error("Both available time and demand must be greater than 0.")
+
+    # --- Customer Lost Rate ---
+    with tab_lost:
+        st.subheader("Customer Lost Rate & Output Flow Rate")
+        st.markdown(
+            "The **Output Flow Rate** is the rate at which customers actually receive service. "
+            "When a process cannot handle all incoming demand (due to capacity limits or lost customers), "
+            "the **Customer Lost Rate** measures how many potential customers are turned away per unit of time."
+        )
+        st.latex(r"\text{Output Flow Rate} = \text{Demand Rate} \times (1 - P_{\text{loss}})")
+        st.latex(r"\text{Customer Lost Rate} = \text{Demand Rate} \times P_{\text{loss}}")
+        st.markdown(
+            "Where: **Demand Rate** = incoming customer rate, "
+            "**P_loss** = probability that a customer is lost (e.g., from Erlang Loss model or observed data)."
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            demand_rate_lr = st.number_input("Demand Rate", value=10.0, key="lr_demand")
+            demand_unit_lr = st.selectbox("Rate Unit", ["Per Minute", "Per Hour", "Per Day"], index=1, key="lr_demand_unit")
+        with col2:
+            p_loss_input = st.number_input("Probability of Loss (P_loss)", value=0.05, min_value=0.0, max_value=1.0, step=0.01, key="lr_ploss")
+
+        sample_size = st.number_input("Sample Size (N) — for reference only", value=100, min_value=1, key="lr_n")
+
+        if st.button("Calculate Lost Rate"):
+            # Normalize demand to per-hour
+            if demand_unit_lr == "Per Minute":
+                demand_hr = demand_rate_lr * 60
+            elif demand_unit_lr == "Per Day":
+                demand_hr = demand_rate_lr / 24
+            else:
+                demand_hr = demand_rate_lr
+
+            output_flow = demand_hr * (1 - p_loss_input)
+            lost_rate = demand_hr * p_loss_input
+
+            st.divider()
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Demand Rate", f"{demand_hr:.2f} / hr")
+            c2.metric("Output Flow Rate", f"{output_flow:.2f} / hr")
+            c3.metric("Customer Lost Rate", f"{lost_rate:.2f} / hr")
+
+            st.divider()
+            st.markdown("### Daily Projections")
+            d1, d2 = st.columns(2)
+            d1.metric("Customers Served / Day", f"{output_flow * 24:.0f}")
+            d2.metric("Customers Lost / Day", f"{lost_rate * 24:.0f}")
+
+            if p_loss_input > 0.10:
+                st.warning(f"Loss rate is {p_loss_input:.0%} — consider adding capacity or reducing processing time.")
+            elif p_loss_input > 0:
+                st.info(f"Loss rate of {p_loss_input:.0%} is within typical ranges for many service systems.")
