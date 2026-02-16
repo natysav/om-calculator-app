@@ -551,7 +551,7 @@ Where: **r** = traffic intensity, **λ** = arrival rate (1/a), **p** = processin
 # ==========================================
 elif week_selection == "Week 6: Process Quality & Takt Time":
     st.header("Week 6: Process Quality & Takt Time")
-    tab_cap, tab_takt, tab_lost = st.tabs(["Process Capability (k-sigma)", "Takt Time", "Customer Lost Rate"])
+    tab_cap, tab_ucl, tab_takt, tab_lost = st.tabs(["Process Capability (k-sigma)", "Control Limits (UCL/LCL)", "Takt Time", "Customer Lost Rate"])
 
     # --- Process Capability (k-sigma) ---
     with tab_cap:
@@ -620,6 +620,48 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
                 st.error("USL must be greater than LSL.")
             else:
                 st.error("Standard deviation must be greater than 0.")
+
+    # --- Control Limits (UCL / LCL) ---
+    with tab_ucl:
+        st.subheader("Control Limits (UCL / LCL)")
+        st.markdown(
+            "**Statistical Process Control** monitors whether a process is behaving as expected. "
+            "We take samples of size *n* and plot the **sample average**. "
+            "If a sample average falls outside the control limits, the process may be **out of control**."
+        )
+        st.latex(r"\text{UCL} = \mu + 3 \times \frac{\sigma}{\sqrt{n}}")
+        st.latex(r"\text{LCL} = \mu - 3 \times \frac{\sigma}{\sqrt{n}}")
+        st.markdown(
+            "Where: **μ** = process mean, **σ** = process standard deviation, "
+            "**n** = sample size (number of units measured per sample)."
+        )
+        st.markdown(
+            "**Important:** Control limits (UCL/LCL) determine whether the *process* is in control. "
+            "They are different from specification limits (USL/LSL), which determine whether *individual units* meet requirements."
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            mean_cl = st.number_input("Process Mean (μ)", value=51.15, key="cl_mean")
+            sigma_cl = st.number_input("Standard Deviation (σ)", value=2.604, min_value=0.001, key="cl_sigma")
+        with col2:
+            n_cl = st.number_input("Sample Size (n)", value=5, min_value=1, key="cl_n")
+
+        if st.button("Calculate Control Limits"):
+            if sigma_cl > 0 and n_cl > 0:
+                ucl = mean_cl + 3 * sigma_cl / math.sqrt(n_cl)
+                lcl = mean_cl - 3 * sigma_cl / math.sqrt(n_cl)
+
+                st.divider()
+                c1, c2, c3 = st.columns(3)
+                c1.metric("UCL", f"{ucl:.4f}")
+                c2.metric("Mean (μ)", f"{mean_cl:.4f}")
+                c3.metric("LCL", f"{lcl:.4f}")
+
+                st.info(
+                    f"A sample average between **{lcl:.4f}** and **{ucl:.4f}** indicates the process is **in control**. "
+                    f"If any sample average falls outside this range, investigate the process for assignable causes."
+                )
 
     # --- Takt Time ---
     with tab_takt:
