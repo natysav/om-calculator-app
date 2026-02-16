@@ -6,6 +6,10 @@ import math
 # HELPER FUNCTIONS
 # ==========================================
 
+def norm_cdf(x, mu, sigma):
+    """Standard normal cumulative distribution function (equivalent to Excel NORM.DIST(x, mu, sigma, TRUE))"""
+    return 0.5 * (1 + math.erf((x - mu) / (sigma * math.sqrt(2))))
+
 def to_minutes(value, unit):
     """Converts any time unit to Minutes"""
     if unit == "Seconds": return value / 60
@@ -577,24 +581,29 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
 
         if st.button("Calculate Process Capability"):
             if sigma_val > 0 and usl > lsl:
+                # Process Capability = P(LSL < X < USL)
+                # = NORM.DIST(USL, Mean, Sigma, TRUE) - NORM.DIST(LSL, Mean, Sigma, TRUE)
+                capability = norm_cdf(usl, mean_val, sigma_val) - norm_cdf(lsl, mean_val, sigma_val)
+                defect_rate = 1 - capability
+
+                st.divider()
+                st.markdown("### Process Capability")
+                st.latex(r"\text{Capability} = \Phi\!\left(\frac{\text{USL} - \mu}{\sigma}\right) - \Phi\!\left(\frac{\text{LSL} - \mu}{\sigma}\right)")
+                c1, c2 = st.columns(2)
+                c1.metric("Process Capability", f"{capability:.3%}")
+                c2.metric("Defect Rate", f"{defect_rate:.3%}")
+
+                # k-sigma level
                 k_upper = (usl - mean_val) / sigma_val
                 k_lower = (mean_val - lsl) / sigma_val
                 k_value = min(k_upper, k_lower)
 
                 st.divider()
+                st.markdown("### k-sigma Analysis")
                 c1, c2, c3 = st.columns(3)
                 c1.metric("k (sigma level)", f"{k_value:.2f}")
                 c2.metric("Distance to USL", f"{k_upper:.2f}σ")
                 c3.metric("Distance to LSL", f"{k_lower:.2f}σ")
-
-                # Cp and Cpk
-                cp = (usl - lsl) / (6 * sigma_val)
-                cpk = k_value / 3
-
-                st.divider()
-                cp1, cp2 = st.columns(2)
-                cp1.metric("Cp (Process Capability)", f"{cp:.4f}", help="(USL - LSL) / 6σ — measures spread relative to spec width")
-                cp2.metric("Cpk (Centered Capability)", f"{cpk:.4f}", help="k / 3 — accounts for how centered the process is")
 
                 if k_value >= 6:
                     st.success(f"Process is **{k_value:.1f}-sigma** — Six Sigma level or better. Extremely capable.")
