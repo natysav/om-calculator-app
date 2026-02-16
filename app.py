@@ -561,14 +561,14 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
             "A process is said to be **k-sigma** if the distance between the distribution mean "
             "and both specification limits (USL and LSL) is at least *k* times the process standard deviation."
         )
-        st.latex(r"k = \min\!\left(\frac{\text{USL} - \mu}{\sigma},\; \frac{\mu - \text{LSL}}{\sigma}\right)")
+        st.latex(r"k = \frac{\text{USL} - \text{LSL}}{\sigma}")
         st.markdown(
             "Where: **USL** = Upper Specification Limit, **LSL** = Lower Specification Limit, "
-            "**μ** = process mean, **σ** = process standard deviation."
+            "**σ** = process standard deviation. *k* is the number of standard deviations that fit between the spec limits."
         )
         st.markdown(
             "A higher *k* means the process is more capable. "
-            "Common targets: **3-sigma** (99.73% within limits) or **6-sigma** (99.99966% within limits)."
+            "Common targets: **6-sigma** (99.73% within limits, ±3σ) or **12-sigma** (Six Sigma, ±6σ)."
         )
 
         col1, col2 = st.columns(2)
@@ -593,29 +593,22 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
                 c1.metric("Process Capability", f"{capability:.3%}")
                 c2.metric("Defect Rate", f"{defect_rate:.3%}")
 
-                # k-sigma level
-                k_upper = (usl - mean_val) / sigma_val
-                k_lower = (mean_val - lsl) / sigma_val
-                k_value = min(k_upper, k_lower)
+                # k-sigma level: number of sigmas between LSL and USL
+                k_value = (usl - lsl) / sigma_val
 
                 st.divider()
                 st.markdown("### k-sigma Analysis")
-                c1, c2, c3 = st.columns(3)
-                c1.metric("k (sigma level)", f"{k_value:.2f}")
-                c2.metric("Distance to USL", f"{k_upper:.2f}σ")
-                c3.metric("Distance to LSL", f"{k_lower:.2f}σ")
+                st.metric("k (sigma level)", f"{k_value:.2f}",
+                          help="k = (USL − LSL) / σ — total spec width in standard deviations")
 
-                if k_value >= 6:
-                    st.success(f"Process is **{k_value:.1f}-sigma** — Six Sigma level or better. Extremely capable.")
-                elif k_value >= 3:
-                    st.success(f"Process is **{k_value:.1f}-sigma** — capable (at least 3-sigma).")
-                elif k_value >= 1:
+                if k_value >= 12:
+                    st.success(f"Process is **{k_value:.1f}-sigma** — Six Sigma (±6σ) or better. Extremely capable.")
+                elif k_value >= 6:
+                    st.success(f"Process is **{k_value:.1f}-sigma** — capable (spec width ≥ 6σ).")
+                elif k_value >= 2:
                     st.warning(f"Process is **{k_value:.1f}-sigma** — marginally capable. Some defects expected.")
                 else:
-                    st.error(f"Process is **{k_value:.1f}-sigma** — NOT capable. Significant output falls outside specification limits.")
-
-                if k_upper < 0 or k_lower < 0:
-                    st.error("The process mean is outside the specification limits!")
+                    st.error(f"Process is **{k_value:.1f}-sigma** — NOT capable. Specification width is very narrow relative to process variation.")
             elif usl <= lsl:
                 st.error("USL must be greater than LSL.")
             else:
