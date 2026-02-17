@@ -20,13 +20,13 @@ def to_minutes(value, unit):
 
 def calculate_erlang_table(m_servers, r_intensity):
     """
-    Returns a dataframe showing the probability of loss for every server count 
+    Returns a dataframe showing the probability of loss for every server count
     from 1 up to m_servers.
     """
     data = []
     # Base case: for 0 servers, probability of loss is 1 (100%)
     p_loss = 1.0
-    
+
     for i in range(1, int(m_servers) + 1):
         # Recursive Erlang B formula: B(m, r) = (r * B(m-1, r)) / (m + r * B(m-1, r))
         if r_intensity > 0:
@@ -35,15 +35,43 @@ def calculate_erlang_table(m_servers, r_intensity):
             p_loss = numerator / denominator
         else:
             p_loss = 0
-            
+
         data.append({
             "Servers (m)": i,
             "Traffic Intensity (r)": r_intensity,
             "P(Loss) %": p_loss * 100,
             "P(Loss) Factor": p_loss
         })
-    
+
     return pd.DataFrame(data), p_loss
+
+# ==========================================
+# FORMULA-STYLE INPUT HELPERS
+# ==========================================
+
+def formula_op(text):
+    """Render a centered operator symbol vertically aligned with number inputs."""
+    st.markdown(
+        f'<div style="text-align:center; font-size:1.5em; font-weight:bold; '
+        f'color:#555; padding-top:32px; line-height:1;">{text}</div>',
+        unsafe_allow_html=True
+    )
+
+def formula_label(text):
+    """Render a result label aligned with number inputs."""
+    st.markdown(
+        f'<div style="text-align:right; font-size:1.15em; font-weight:600; '
+        f'color:#333; padding-top:34px; line-height:1;">{text}</div>',
+        unsafe_allow_html=True
+    )
+
+def formula_text(text):
+    """Render inline formula text aligned with number inputs."""
+    st.markdown(
+        f'<div style="text-align:center; font-size:1.05em; '
+        f'color:#444; padding-top:34px; line-height:1;">{text}</div>',
+        unsafe_allow_html=True
+    )
 
 # ==========================================
 # PAGE CONFIGURATION
@@ -73,7 +101,7 @@ week_selection = st.sidebar.selectbox(
 # ==========================================
 if week_selection == "Week 1: Process Fundamentals":
     st.header("Week 1: Process Fundamentals")
-    
+
     tab1, tab2, tab3 = st.tabs(["Flow Rate", "Cycle Time", "Process Capacity"])
 
     # --- Flow Rate ---
@@ -81,11 +109,21 @@ if week_selection == "Week 1: Process Fundamentals":
         st.subheader("Flow Rate Calculator")
         st.markdown("**Flow Rate** is the number of flow units (e.g., customers, products) that pass through a process per unit of time. It measures the throughput of a process.")
         st.latex(r"\text{Flow Rate} = \frac{\text{Units Produced}}{\text{Time}}")
-        c1, c2 = st.columns(2)
-        units = c1.number_input("Units Produced", value=100.0)
-        time_val = c2.number_input("Time Taken", value=1.0)
-        time_unit = c2.selectbox("Time Unit", ["Minutes", "Hours", "Days"], index=1)
-        
+
+        # Formula-style input
+        c_lbl, c_eq, c_num, c_div, c_den = st.columns([1.5, 0.3, 2, 0.3, 2])
+        with c_lbl:
+            formula_label("Flow Rate")
+        with c_eq:
+            formula_op("=")
+        with c_num:
+            units = st.number_input("Units Produced", value=100.0)
+        with c_div:
+            formula_op("÷")
+        with c_den:
+            time_val = st.number_input("Time Taken", value=1.0)
+            time_unit = st.selectbox("Time Unit", ["Minutes", "Hours", "Days"], index=1)
+
         if st.button("Calculate Flow Rate"):
             t_mins = to_minutes(time_val, time_unit)
             if t_mins > 0:
@@ -100,15 +138,26 @@ if week_selection == "Week 1: Process Fundamentals":
         st.subheader("Cycle Time Calculator")
         st.markdown("**Cycle Time** is the average time between consecutive flow units completing the process. It is the inverse of the flow rate.")
         st.latex(r"\text{Cycle Time} = \frac{1}{\text{Flow Rate}}")
-        c1, c2 = st.columns(2)
-        fr_val = c1.number_input("Flow Rate", value=5.0)
-        fr_unit = c1.selectbox("Rate Unit", ["Units/Minute", "Units/Hour", "Units/Day"], index=1)
-        
+
+        # Formula-style input
+        c_lbl, c_eq, c_one, c_div, c_fr = st.columns([1.5, 0.3, 0.8, 0.3, 2])
+        with c_lbl:
+            formula_label("Cycle Time")
+        with c_eq:
+            formula_op("=")
+        with c_one:
+            formula_text("1")
+        with c_div:
+            formula_op("÷")
+        with c_fr:
+            fr_val = st.number_input("Flow Rate", value=5.0)
+            fr_unit = st.selectbox("Rate Unit", ["Units/Minute", "Units/Hour", "Units/Day"], index=1)
+
         if st.button("Calculate Cycle Time"):
             if fr_unit == "Units/Hour": fr_min = fr_val / 60
             elif fr_unit == "Units/Day": fr_min = fr_val / 1440
             else: fr_min = fr_val
-            
+
             if fr_min > 0:
                 ct_min = 1 / fr_min
                 st.success(f"Cycle Time: **{ct_min:.2f} minutes/unit**")
@@ -120,13 +169,28 @@ if week_selection == "Week 1: Process Fundamentals":
         st.subheader("Process Capacity (Bottleneck)")
         st.markdown("**Process Capacity** is determined by the **bottleneck** — the step with the lowest capacity. The bottleneck limits the overall throughput of the entire process.")
         st.latex(r"\text{Process Capacity} = \min(\text{Capacity}_1,\; \text{Capacity}_2,\; \dots,\; \text{Capacity}_n)")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("**Enter capacities for up to 3 steps:**")
+
+        # Formula-style input: Capacity = min( S1 , S2 , S3 )
+        c_lbl, c_eq, c_min, c_s1, c_c1, c_s2, c_c2, c_s3, c_par = st.columns([1.5, 0.3, 0.6, 1.5, 0.3, 1.5, 0.3, 1.5, 0.3])
+        with c_lbl:
+            formula_label("Capacity")
+        with c_eq:
+            formula_op("=")
+        with c_min:
+            formula_text("min (")
+        with c_s1:
             s1 = st.number_input("Step 1 Capacity", value=100.0)
+        with c_c1:
+            formula_op(",")
+        with c_s2:
             s2 = st.number_input("Step 2 Capacity", value=80.0)
+        with c_c2:
+            formula_op(",")
+        with c_s3:
             s3 = st.number_input("Step 3 Capacity", value=120.0)
-            
+        with c_par:
+            formula_text(")")
+
         if st.button("Find Bottleneck"):
             b_neck = min(s1, s2, s3)
             st.success(f"Process Capacity: **{b_neck}** (Limited by the lowest step)")
@@ -143,30 +207,48 @@ elif week_selection == "Week 2: Inventory & Little's Law":
         st.markdown("**Little's Law** links the three fundamental process metrics. The average number of flow units in the system (Inventory) equals the flow rate multiplied by the average flow time. It holds for any stable process.")
         st.latex(r"I = R \times T")
         st.markdown("Where **I** = Inventory (units in process), **R** = Flow Rate (throughput), **T** = Flow Time (time a unit spends in the system).")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
+
+        # Formula-style input: I = R × T
+        c_lbl, c_eq, c_r, c_mul, c_t = st.columns([1, 0.3, 2.5, 0.3, 2.5])
+        with c_lbl:
+            formula_label("I")
+        with c_eq:
+            formula_op("=")
+        with c_r:
             r_val = st.number_input("Flow Rate (R)", value=10.0)
             r_unit = st.selectbox("Unit (R)", ["Units/Minute", "Units/Hour", "Units/Day"], index=1)
-        with col2:
+        with c_mul:
+            formula_op("×")
+        with c_t:
             t_val = st.number_input("Flow Time (T)", value=2.0)
             t_unit = st.selectbox("Unit (T)", ["Minutes", "Hours", "Days"], index=1)
-        with col3:
-            st.markdown("#### Result")
-            if st.button("Calculate Inventory"):
-                if r_unit == "Units/Hour": r_norm = r_val / 60
-                elif r_unit == "Units/Day": r_norm = r_val / 1440
-                else: r_norm = r_val
-                
-                t_norm = to_minutes(t_val, t_unit)
-                st.metric("Inventory (I)", f"{r_norm * t_norm:.2f} units")
+
+        if st.button("Calculate Inventory"):
+            if r_unit == "Units/Hour": r_norm = r_val / 60
+            elif r_unit == "Units/Day": r_norm = r_val / 1440
+            else: r_norm = r_val
+
+            t_norm = to_minutes(t_val, t_unit)
+            st.metric("Inventory (I)", f"{r_norm * t_norm:.2f} units")
 
     with tab2:
         st.subheader("Inventory Turns")
         st.markdown("**Inventory Turns** measures how many times a company's inventory is sold and replaced over a period. Higher turns indicate more efficient inventory management.")
         st.latex(r"\text{Inventory Turns} = \frac{\text{COGS}}{\text{Average Inventory Value}}")
-        cogs = st.number_input("Cost of Goods Sold (COGS)", value=1000000.0)
-        inv_val = st.number_input("Average Inventory Value", value=100000.0)
+
+        # Formula-style input: Turns = COGS ÷ Avg Inventory
+        c_lbl, c_eq, c_cogs, c_div, c_inv = st.columns([1.5, 0.3, 2, 0.3, 2])
+        with c_lbl:
+            formula_label("Turns")
+        with c_eq:
+            formula_op("=")
+        with c_cogs:
+            cogs = st.number_input("Cost of Goods Sold (COGS)", value=1000000.0)
+        with c_div:
+            formula_op("÷")
+        with c_inv:
+            inv_val = st.number_input("Average Inventory Value", value=100000.0)
+
         if st.button("Calculate Turns"):
             if inv_val > 0:
                 st.metric("Inventory Turns", f"{cogs/inv_val:.2f}")
@@ -182,8 +264,20 @@ elif week_selection == "Week 3: Capacity & Labor":
         st.subheader("Cost of Direct Labor")
         st.markdown("**Cost of Direct Labor** is the labor expense incurred to produce one flow unit. It is calculated by dividing total wages by the flow rate.")
         st.latex(r"\text{Cost of Direct Labor} = \frac{\text{Total Wages per Hour}}{\text{Flow Rate (units/hour)}}")
-        wages = st.number_input("Total Wages per Hour ($)", value=60.0)
-        fr_hr = st.number_input("Flow Rate (Units/Hour)", value=2.0)
+
+        # Formula-style input: Cost = Wages ÷ Flow Rate
+        c_lbl, c_eq, c_w, c_div, c_fr = st.columns([1.5, 0.3, 2, 0.3, 2])
+        with c_lbl:
+            formula_label("Cost")
+        with c_eq:
+            formula_op("=")
+        with c_w:
+            wages = st.number_input("Total Wages per Hour ($)", value=60.0)
+        with c_div:
+            formula_op("÷")
+        with c_fr:
+            fr_hr = st.number_input("Flow Rate (Units/Hour)", value=2.0)
+
         if st.button("Calculate Cost"):
             if fr_hr > 0:
                 st.metric("Direct Labor Cost", f"${wages/fr_hr:.2f} per unit")
@@ -192,8 +286,20 @@ elif week_selection == "Week 3: Capacity & Labor":
         st.subheader("Implied Utilization")
         st.markdown("**Implied Utilization** is the ratio of demand to capacity. If it exceeds 100%, the resource is a bottleneck and cannot meet demand.")
         st.latex(r"\text{Implied Utilization} = \frac{\text{Demand}}{\text{Capacity}}")
-        demand = st.number_input("Demand Rate", value=15.0)
-        cap = st.number_input("Capacity", value=20.0)
+
+        # Formula-style input: u = Demand ÷ Capacity
+        c_lbl, c_eq, c_d, c_div, c_cap = st.columns([1.5, 0.3, 2, 0.3, 2])
+        with c_lbl:
+            formula_label("u")
+        with c_eq:
+            formula_op("=")
+        with c_d:
+            demand = st.number_input("Demand Rate", value=15.0)
+        with c_div:
+            formula_op("÷")
+        with c_cap:
+            cap = st.number_input("Capacity", value=20.0)
+
         if st.button("Calculate Implied Util"):
             if cap > 0:
                 u = demand/cap
@@ -203,8 +309,20 @@ elif week_selection == "Week 3: Capacity & Labor":
         st.subheader("Utilization")
         st.markdown("**Utilization** is the fraction of capacity actually being used. Unlike implied utilization (which uses demand), this uses the **actual flow rate**.")
         st.latex(r"\text{Utilization} = \frac{\text{Flow Rate}}{\text{Capacity}}")
-        flow_rate_u = st.number_input("Flow Rate", value=12.0, key="util_fr")
-        capacity_u = st.number_input("Capacity", value=20.0, key="util_cap")
+
+        # Formula-style input: u = Flow Rate ÷ Capacity
+        c_lbl, c_eq, c_fr, c_div, c_cap = st.columns([1.5, 0.3, 2, 0.3, 2])
+        with c_lbl:
+            formula_label("u")
+        with c_eq:
+            formula_op("=")
+        with c_fr:
+            flow_rate_u = st.number_input("Flow Rate", value=12.0, key="util_fr")
+        with c_div:
+            formula_op("÷")
+        with c_cap:
+            capacity_u = st.number_input("Capacity", value=20.0, key="util_cap")
+
         if st.button("Calculate Utilization"):
             if capacity_u > 0:
                 utilization = flow_rate_u / capacity_u
@@ -216,7 +334,18 @@ elif week_selection == "Week 3: Capacity & Labor":
         st.subheader("Labor Content")
         st.markdown("**Labor Content** is the total amount of labor time required to produce one flow unit. It is the sum of all individual activity times across workers.")
         st.latex(r"\text{Labor Content} = \sum_{i=1}^{n} \text{Activity Time}_i")
-        times = st.text_input("Task Times (Minutes, comma separated)", "1.0, 0.5, 2.5")
+
+        # Formula-style input: Total = Σ ( task times )
+        c_lbl, c_eq, c_sig, c_inp = st.columns([1.5, 0.3, 0.5, 4])
+        with c_lbl:
+            formula_label("Total")
+        with c_eq:
+            formula_op("=")
+        with c_sig:
+            formula_op("Σ")
+        with c_inp:
+            times = st.text_input("Task Times (Minutes, comma separated)", "1.0, 0.5, 2.5")
+
         if st.button("Sum Labor Content"):
             try:
                 t_list = [float(x.strip()) for x in times.split(',')]
@@ -233,14 +362,35 @@ elif week_selection == "Week 4: Batches & Setup":
     st.markdown("**Capacity with Batching** accounts for the setup time incurred each time a new batch is started. Larger batches spread the fixed setup cost over more units, increasing effective capacity.")
     st.latex(r"\text{Capacity} = \frac{\text{Batch Size}}{\text{Setup Time} + \text{Batch Size} \times \text{Processing Time per Unit}}")
 
-    c1, c2 = st.columns(2)
-    b_size = c1.number_input("Batch Size", value=10.0)
-    s_time = c1.number_input("Setup Time (per batch)", value=10.0)
-    s_unit = c1.selectbox("Setup Unit", ["Minutes", "Hours"], index=0)
-    
-    p_time = c2.number_input("Processing Time (per unit)", value=1.0)
-    p_unit = c2.selectbox("Processing Unit", ["Minutes", "Hours"], index=0)
-    
+    # Formula-style input — fraction layout
+    # Numerator row
+    c_left, c_right = st.columns([1.5, 5])
+    with c_left:
+        st.markdown("")
+        st.markdown("")
+        st.markdown(
+            '<div style="text-align:right; font-size:1.15em; font-weight:600; '
+            'color:#333; padding-top:20px; line-height:1;">Capacity &nbsp;=</div>',
+            unsafe_allow_html=True
+        )
+    with c_right:
+        b_size = st.number_input("Batch Size (B)", value=10.0)
+        # Fraction bar
+        st.markdown(
+            '<hr style="margin: 2px 0; border: none; border-top: 2px solid #555;">',
+            unsafe_allow_html=True
+        )
+        # Denominator: Setup + B × Processing
+        d1, d_op1, d2, d_op2, d3 = st.columns([2, 0.5, 2, 0.5, 2])
+        with d1:
+            s_time = st.number_input("Setup Time (per batch)", value=10.0)
+            s_unit = st.selectbox("Setup Unit", ["Minutes", "Hours"], index=0)
+        with d_op1:
+            formula_op("+ B ×")
+        with d2:
+            p_time = st.number_input("Processing Time (per unit)", value=1.0)
+            p_unit = st.selectbox("Processing Unit", ["Minutes", "Hours"], index=0)
+
     if st.button("Calculate Batch Capacity"):
         s_min = to_minutes(s_time, s_unit)
         p_min = to_minutes(p_time, p_unit)
@@ -267,19 +417,51 @@ Where: **p** = processing time, **m** = number of servers, **u** = utilization (
 **a** = interarrival time, **CV_a** = coefficient of variation of arrivals, **CV_p** = coefficient of variation of processing.
 """)
 
-        col_in1, col_in2, col_in3 = st.columns(3)
-        with col_in1:
-            m = st.number_input("Number of Servers (m)", min_value=1, value=2)
-            a_val = st.number_input("Interarrival Time (a)", value=5.0)
-            a_unit = st.selectbox("Unit (a)", ["Seconds", "Minutes", "Hours"], index=1, key="q_a")
-            
-        with col_in2:
+        # Formula-style input — Row 1: Utilization sub-formula
+        st.markdown("**Utilization:**")
+        u_lbl, u_eq, u_p, u_div, u_br1, u_a, u_mul, u_m, u_br2 = st.columns(
+            [0.5, 0.3, 1.8, 0.3, 0.2, 1.8, 0.3, 1.2, 0.2]
+        )
+        with u_lbl:
+            formula_label("u")
+        with u_eq:
+            formula_op("=")
+        with u_p:
             p_val = st.number_input("Processing Time (p)", value=6.0)
             p_unit = st.selectbox("Unit (p)", ["Seconds", "Minutes", "Hours"], index=1, key="q_p")
-            
-        with col_in3:
+        with u_div:
+            formula_op("÷")
+        with u_br1:
+            formula_text("(")
+        with u_a:
+            a_val = st.number_input("Interarrival Time (a)", value=5.0)
+            a_unit = st.selectbox("Unit (a)", ["Seconds", "Minutes", "Hours"], index=1, key="q_a")
+        with u_mul:
+            formula_op("×")
+        with u_m:
+            m = st.number_input("Servers (m)", min_value=1, value=2)
+        with u_br2:
+            formula_text(")")
+
+        # Formula-style input — Row 2: Variability sub-formula
+        st.markdown("**Variability:**")
+        v_br1, v_cva, v_plus, v_cvp, v_br2, v_div, v_two = st.columns(
+            [0.2, 2, 0.3, 2, 0.2, 0.3, 0.5]
+        )
+        with v_br1:
+            formula_text("(")
+        with v_cva:
             cv_a = st.number_input("CV of Arrivals (CVa)", value=1.0)
+        with v_plus:
+            formula_op("+")
+        with v_cvp:
             cv_p = st.number_input("CV of Process (CVp)", value=0.5)
+        with v_br2:
+            formula_text(")")
+        with v_div:
+            formula_op("÷")
+        with v_two:
+            formula_text("2")
 
         # Normalize to Minutes
         a_min = to_minutes(a_val, a_unit)
@@ -319,10 +501,18 @@ Where: **r** = traffic intensity, **λ** = arrival rate (1/a), **p** = processin
         # Input Method Selection
         input_method = st.radio("Select Input Method:", ["Interarrival Time (a)", "Demand Rate (1/a)"], horizontal=True)
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
+        # Formula-style input: r = λ × p  with m servers
+        st.markdown("**Traffic Intensity:**")
+        r_lbl, r_eq, r_lam, r_mul, r_p, r_with, r_m = st.columns(
+            [0.5, 0.3, 2, 0.3, 2, 0.5, 1.5]
+        )
+        with r_lbl:
+            formula_label("r")
+        with r_eq:
+            formula_op("=")
+        with r_lam:
             if input_method == "Interarrival Time (a)":
-                val_a = st.number_input("Average Interarrival Time", value=3.0)
+                val_a = st.number_input("Avg Interarrival Time", value=3.0)
                 unit_a = st.selectbox("Time Unit", ["Minutes", "Hours", "Days"], index=1, key="loss_a")
                 # Calculate Lambda (per hour for reference)
                 a_hours = to_minutes(val_a, unit_a) / 60
@@ -334,36 +524,38 @@ Where: **r** = traffic intensity, **λ** = arrival rate (1/a), **p** = processin
                 if unit_d == "Per Minute": lam = val_d * 60
                 elif unit_d == "Per Day": lam = val_d / 24
                 else: lam = val_d
-
-        with col2:
-            proc_time = st.number_input("Average Processing Time", value=2.0)
+        with r_mul:
+            formula_op("×")
+        with r_p:
+            proc_time = st.number_input("Avg Processing Time (p)", value=2.0)
             proc_unit = st.selectbox("Time Unit", ["Minutes", "Hours", "Days"], index=1, key="loss_p")
             # Calculate P (in hours)
             p_hours = to_minutes(proc_time, proc_unit) / 60
-
-        with col3:
-            m_loss = st.number_input("Number of Servers (m)", value=3, min_value=1, key="loss_m")
+        with r_with:
+            formula_text("with")
+        with r_m:
+            m_loss = st.number_input("Servers (m)", value=3, min_value=1, key="loss_m")
 
         if st.button("Calculate Loss Metrics"):
             # 1. Calculate Traffic Intensity (r) = Demand/Hour * ProcessTime/Hour
             # (unitless)
             r = lam * p_hours
-            
+
             # 2. Calculate Erlang Loss Table
             df_table, p_loss_final = calculate_erlang_table(m_loss, r)
-            
+
             # 3. Key Metrics
             # Implied Util (if no loss)
             implied_util = r / m_loss
-            
+
             # Actual Util (accounting for loss) -> This matches your spreadsheet (0.216)
             actual_util = (r * (1 - p_loss_final)) / m_loss
-            
+
             # Flow Rates
             demand_rate_display = lam  # In units/hour
             loss_rate = demand_rate_display * p_loss_final
             flow_rate = demand_rate_display * (1 - p_loss_final)
-            
+
             # Display
             st.divider()
             c_res1, c_res2, c_res3, c_res4 = st.columns(4)
@@ -371,15 +563,15 @@ Where: **r** = traffic intensity, **λ** = arrival rate (1/a), **p** = processin
             c_res2.metric("Prob. of Loss", f"{p_loss_final:.2%}")
             c_res3.metric("Throughput Loss", f"{loss_rate:.2f} / hr")
             c_res4.metric("Actual Flow Rate", f"{flow_rate:.2f} / hr")
-            
+
             st.divider()
-            
+
             # The specific metric requested
             st.markdown("### Utilization Metrics")
             cu1, cu2 = st.columns(2)
             cu1.metric("Implied Utilization", f"{implied_util:.2%}", help="Demand / Capacity")
             cu2.metric("Average Utilisation", f"{actual_util:.6f}", help="Matches your worksheet: (Flow Rate / Capacity)")
-            
+
             if abs(actual_util - 0.216561) < 0.001:
                 st.caption("✅ Matches the '0.216561' from your example file.")
 
@@ -406,25 +598,61 @@ Where: **r** = traffic intensity, **λ** = arrival rate (1/a), **p** = processin
             "abandoning is consistent with the resulting queue length."
         )
 
-        col_a1, col_a2, col_a3 = st.columns(3)
-        with col_a1:
-            m_adj = st.number_input("Number of Servers (m)", min_value=1, value=2, key="adj_m")
-            a_adj_val = st.number_input("Interarrival Time (a)", value=5.0, key="adj_a")
-            a_adj_unit = st.selectbox("Unit (a)", ["Seconds", "Minutes", "Hours"], index=1, key="adj_a_unit")
-
-        with col_a2:
+        # Formula-style input — Row 1: Utilization sub-formula
+        st.markdown("**Utilization:**")
+        u_lbl, u_eq, u_p, u_div, u_br1, u_a, u_mul, u_m, u_br2 = st.columns(
+            [0.5, 0.3, 1.8, 0.3, 0.2, 1.8, 0.3, 1.2, 0.2]
+        )
+        with u_lbl:
+            formula_label("u")
+        with u_eq:
+            formula_op("=")
+        with u_p:
             p_adj_val = st.number_input("Processing Time (p)", value=6.0, key="adj_p")
             p_adj_unit = st.selectbox("Unit (p)", ["Seconds", "Minutes", "Hours"], index=1, key="adj_p_unit")
+        with u_div:
+            formula_op("÷")
+        with u_br1:
+            formula_text("(")
+        with u_a:
+            a_adj_val = st.number_input("Interarrival Time (a)", value=5.0, key="adj_a")
+            a_adj_unit = st.selectbox("Unit (a)", ["Seconds", "Minutes", "Hours"], index=1, key="adj_a_unit")
+        with u_mul:
+            formula_op("×")
+        with u_m:
+            m_adj = st.number_input("Servers (m)", min_value=1, value=2, key="adj_m")
+        with u_br2:
+            formula_text(")")
 
-        with col_a3:
+        # Formula-style input — Row 2: Variability sub-formula
+        st.markdown("**Variability:**")
+        v_br1, v_cva, v_plus, v_cvp, v_br2, v_div, v_two = st.columns(
+            [0.2, 2, 0.3, 2, 0.2, 0.3, 0.5]
+        )
+        with v_br1:
+            formula_text("(")
+        with v_cva:
             cv_a_adj = st.number_input("CV of Arrivals (CVa)", value=1.0, key="adj_cva")
+        with v_plus:
+            formula_op("+")
+        with v_cvp:
             cv_p_adj = st.number_input("CV of Process (CVp)", value=0.5, key="adj_cvp")
+        with v_br2:
+            formula_text(")")
+        with v_div:
+            formula_op("÷")
+        with v_two:
+            formula_text("2")
 
-        st.divider()
-        col_w1, col_w2 = st.columns(2)
-        with col_w1:
+        # Formula-style input — Row 3: Willingness to Wait
+        st.markdown("**Patience:**")
+        w_lbl, w_eq, w_inp, _, _ = st.columns([0.5, 0.3, 2, 2, 2])
+        with w_lbl:
+            formula_label("W")
+        with w_eq:
+            formula_op("=")
+        with w_inp:
             w_val = st.number_input("Willingness to Wait (W)", value=5.0, min_value=0.01, key="adj_w")
-        with col_w2:
             w_unit = st.selectbox("Unit (W)", ["Seconds", "Minutes", "Hours"], index=1, key="adj_w_unit")
 
         a_adj_min = to_minutes(a_adj_val, a_adj_unit)
@@ -572,18 +800,52 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
             "Reference: **1σ** ≈ 68.27%, **2σ** ≈ 95.45%, **3σ** ≈ 99.73%, **6σ** ≈ 99.9999998%."
         )
 
-        col1, col2 = st.columns(2)
-        with col1:
+        # Formula-style input — two sub-formulas for k
+        # Row 1: ( USL - μ ) ÷ σ
+        st.markdown("**Upper distance:**")
+        k1_br1, k1_usl, k1_minus, k1_mu, k1_br2, k1_div, k1_sig = st.columns(
+            [0.2, 1.8, 0.3, 1.8, 0.2, 0.3, 1.5]
+        )
+        with k1_br1:
+            formula_text("(")
+        with k1_usl:
+            usl = st.number_input("Upper Spec Limit (USL)", value=56.0, key="cap_usl")
+        with k1_minus:
+            formula_op("−")
+        with k1_mu:
             mean_val = st.number_input("Process Mean (μ)", value=50.0, key="cap_mean")
-            sigma_val = st.number_input("Standard Deviation (σ)", value=2.0, min_value=0.001, key="cap_sigma")
-        with col2:
-            usl = st.number_input("Upper Specification Limit (USL)", value=56.0, key="cap_usl")
-            lsl = st.number_input("Lower Specification Limit (LSL)", value=44.0, key="cap_lsl")
+        with k1_br2:
+            formula_text(")")
+        with k1_div:
+            formula_op("÷")
+        with k1_sig:
+            sigma_val = st.number_input("Std Deviation (σ)", value=2.0, min_value=0.001, key="cap_sigma")
+
+        # Row 2: ( μ - LSL ) ÷ σ
+        st.markdown("**Lower distance:**")
+        k2_br1, k2_mu, k2_minus, k2_lsl, k2_br2, k2_div, k2_sig = st.columns(
+            [0.2, 1.8, 0.3, 1.8, 0.2, 0.3, 1.5]
+        )
+        with k2_br1:
+            formula_text("(")
+        with k2_mu:
+            formula_text("μ")
+        with k2_minus:
+            formula_op("−")
+        with k2_lsl:
+            lsl = st.number_input("Lower Spec Limit (LSL)", value=44.0, key="cap_lsl")
+        with k2_br2:
+            formula_text(")")
+        with k2_div:
+            formula_op("÷")
+        with k2_sig:
+            formula_text("σ")
+
+        st.markdown("*k = min of the two distances above*")
 
         if st.button("Calculate Process Capability"):
             if sigma_val > 0 and usl > lsl:
                 # Process Capability = P(LSL < X < USL)
-                # = NORM.DIST(USL, Mean, Sigma, TRUE) - NORM.DIST(LSL, Mean, Sigma, TRUE)
                 capability = norm_cdf(usl, mean_val, sigma_val) - norm_cdf(lsl, mean_val, sigma_val)
                 defect_rate = 1 - capability
 
@@ -594,7 +856,7 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
                 c1.metric("Process Capability", f"{capability:.3%}")
                 c2.metric("Defect Rate", f"{defect_rate:.3%}")
 
-                # k-sigma: distance from mean to nearest spec limit, in standard deviations
+                # k-sigma
                 k_upper = (usl - mean_val) / sigma_val
                 k_lower = (mean_val - lsl) / sigma_val
                 k_value = min(k_upper, k_lower)
@@ -640,12 +902,28 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
             "They are different from specification limits (USL/LSL), which determine whether *individual units* meet requirements."
         )
 
-        col1, col2 = st.columns(2)
-        with col1:
+        # Formula-style input: UCL/LCL = μ ± 3 × σ ÷ √n
+        c_lbl, c_eq, c_mu, c_pm, c_three, c_mul, c_sig, c_div, c_sqn = st.columns(
+            [1.2, 0.3, 1.5, 0.3, 0.4, 0.3, 1.5, 0.3, 1.5]
+        )
+        with c_lbl:
+            formula_label("UCL / LCL")
+        with c_eq:
+            formula_op("=")
+        with c_mu:
             mean_cl = st.number_input("Process Mean (μ)", value=51.15, key="cl_mean")
-            sigma_cl = st.number_input("Standard Deviation (σ)", value=2.604, min_value=0.001, key="cl_sigma")
-        with col2:
-            n_cl = st.number_input("Sample Size (n)", value=5, min_value=1, key="cl_n")
+        with c_pm:
+            formula_op("±")
+        with c_three:
+            formula_text("3")
+        with c_mul:
+            formula_op("×")
+        with c_sig:
+            sigma_cl = st.number_input("Std Deviation (σ)", value=2.604, min_value=0.001, key="cl_sigma")
+        with c_div:
+            formula_op("÷")
+        with c_sqn:
+            n_cl = st.number_input("√ Sample Size (n)", value=5, min_value=1, key="cl_n")
 
         if st.button("Calculate Control Limits"):
             if sigma_cl > 0 and n_cl > 0:
@@ -677,12 +955,19 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
             "**Customer Demand** = number of units required in the same period."
         )
 
-        col1, col2 = st.columns(2)
-        with col1:
+        # Formula-style input: Takt = Available Time ÷ Demand
+        c_lbl, c_eq, c_time, c_div, c_dem = st.columns([1.5, 0.3, 2, 0.3, 2])
+        with c_lbl:
+            formula_label("Takt Time")
+        with c_eq:
+            formula_op("=")
+        with c_time:
             avail_time = st.number_input("Available Production Time", value=480.0, key="takt_time")
             time_unit_takt = st.selectbox("Time Unit", ["Minutes", "Hours", "Days"], index=0, key="takt_time_unit")
-        with col2:
-            demand_takt = st.number_input("Customer Demand (units in same period)", value=240.0, min_value=0.01, key="takt_demand")
+        with c_div:
+            formula_op("÷")
+        with c_dem:
+            demand_takt = st.number_input("Customer Demand (units)", value=240.0, min_value=0.01, key="takt_demand")
 
         n_workers = st.number_input("Number of Workers (optional, for cycle time comparison)", value=1, min_value=1, key="takt_workers")
 
@@ -722,12 +1007,30 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
             "**P_loss** = probability that a customer is lost (e.g., from Erlang Loss model or observed data)."
         )
 
-        col1, col2 = st.columns(2)
-        with col1:
+        # Formula-style input: Output = Demand × (1 - P_loss)
+        st.markdown("**Output Flow Rate:**")
+        o_lbl, o_eq, o_dem, o_mul, o_br1, o_one, o_minus, o_pl, o_br2 = st.columns(
+            [1.2, 0.3, 2, 0.3, 0.2, 0.4, 0.3, 1.5, 0.2]
+        )
+        with o_lbl:
+            formula_label("Output")
+        with o_eq:
+            formula_op("=")
+        with o_dem:
             demand_rate_lr = st.number_input("Demand Rate", value=10.0, key="lr_demand")
             demand_unit_lr = st.selectbox("Rate Unit", ["Per Minute", "Per Hour", "Per Day"], index=1, key="lr_demand_unit")
-        with col2:
-            p_loss_input = st.number_input("Probability of Loss (P_loss)", value=0.05, min_value=0.0, max_value=1.0, step=0.01, key="lr_ploss")
+        with o_mul:
+            formula_op("×")
+        with o_br1:
+            formula_text("(")
+        with o_one:
+            formula_text("1")
+        with o_minus:
+            formula_op("−")
+        with o_pl:
+            p_loss_input = st.number_input("P_loss", value=0.05, min_value=0.0, max_value=1.0, step=0.01, key="lr_ploss")
+        with o_br2:
+            formula_text(")")
 
         sample_size = st.number_input("Sample Size (N) — for reference only", value=100, min_value=1, key="lr_n")
 
