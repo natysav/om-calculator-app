@@ -1129,7 +1129,7 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
         with k1_div:
             formula_op("÷")
         with k1_sig:
-            sigma_val = st.number_input("Std Deviation (σ)", value=2.0, min_value=0.001, key="cap_sigma")
+            sigma_val = st.number_input("Std Deviation (σ)", value=2.0, min_value=0.001, format="%.4f", key="cap_sigma")
 
         # Row 2: ( μ - LSL ) ÷ σ
         st.markdown("**Lower distance:**")
@@ -1229,7 +1229,7 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
         with c_mul:
             formula_op("×")
         with c_sig:
-            sigma_cl = st.number_input("Std Deviation (σ)", value=2.604, min_value=0.001, key="cl_sigma")
+            sigma_cl = st.number_input("Std Deviation (σ)", value=2.604, min_value=0.001, format="%.4f", key="cl_sigma")
         with c_div:
             formula_op("÷")
         with c_sqn:
