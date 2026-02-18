@@ -358,54 +358,250 @@ elif week_selection == "Week 3: Capacity & Labor":
 # ==========================================
 elif week_selection == "Week 4: Batches & Setup":
     st.header("Week 4: Batches & Setup")
-    st.subheader("Capacity with Batching")
-    st.markdown("**Capacity with Batching** accounts for the setup time incurred each time a new batch is started. Larger batches spread the fixed setup cost over more units, increasing effective capacity.")
-    st.latex(r"\text{Capacity} = \frac{\text{Batch Size}}{\text{Setup Time} + \text{Batch Size} \times \text{Processing Time per Unit}}")
+    tab_batch_cap, tab_batch_size, tab_eoq = st.tabs(["Capacity with Batching", "Recommended Batch Size", "Economic Order Quantity (EOQ)"])
 
-    # Formula-style input — fraction layout
-    # Numerator row
-    c_left, c_right = st.columns([1.5, 5])
-    with c_left:
-        st.markdown("")
-        st.markdown("")
-        st.markdown(
-            '<div style="text-align:right; font-size:1.15em; font-weight:600; '
-            'color:#333; padding-top:20px; line-height:1;">Capacity &nbsp;=</div>',
-            unsafe_allow_html=True
-        )
-    with c_right:
-        b_size = st.number_input("Batch Size (B)", value=10.0)
-        # Fraction bar
-        st.markdown(
-            '<hr style="margin: 2px 0; border: none; border-top: 2px solid #555;">',
-            unsafe_allow_html=True
-        )
-        # Denominator: Setup + B × Processing
-        d1, d_op1, d2, d_op2, d3 = st.columns([2, 0.5, 2, 0.5, 2])
-        with d1:
-            s_time = st.number_input("Setup Time (per batch)", value=10.0)
-            s_unit = st.selectbox("Setup Unit", ["Minutes", "Hours"], index=0)
-        with d_op1:
-            formula_op("+ B ×")
-        with d2:
-            p_time = st.number_input("Processing Time (per unit)", value=1.0)
-            p_unit = st.selectbox("Processing Unit", ["Minutes", "Hours"], index=0)
+    # --- Capacity with Batching ---
+    with tab_batch_cap:
+        st.subheader("Capacity with Batching")
+        st.markdown("**Capacity with Batching** accounts for the setup time incurred each time a new batch is started. Larger batches spread the fixed setup cost over more units, increasing effective capacity.")
+        st.latex(r"\text{Capacity} = \frac{\text{Batch Size}}{\text{Setup Time} + \text{Batch Size} \times \text{Processing Time per Unit}}")
 
-    if st.button("Calculate Batch Capacity"):
-        s_min = to_minutes(s_time, s_unit)
-        p_min = to_minutes(p_time, p_unit)
-        denom = s_min + (b_size * p_min)
-        if denom > 0:
-            cap_min = b_size / denom
-            st.success(f"Capacity: **{cap_min:.4f} units/minute**")
-            st.info(f"({cap_min*60:.2f} units/hour)")
+        # Formula-style input — fraction layout
+        # Numerator row
+        c_left, c_right = st.columns([1.5, 5])
+        with c_left:
+            st.markdown("")
+            st.markdown("")
+            st.markdown(
+                '<div style="text-align:right; font-size:1.15em; font-weight:600; '
+                'color:#333; padding-top:20px; line-height:1;">Capacity &nbsp;=</div>',
+                unsafe_allow_html=True
+            )
+        with c_right:
+            b_size = st.number_input("Batch Size (B)", value=10.0)
+            # Fraction bar
+            st.markdown(
+                '<hr style="margin: 2px 0; border: none; border-top: 2px solid #555;">',
+                unsafe_allow_html=True
+            )
+            # Denominator: Setup + B × Processing
+            d1, d_op1, d2, d_op2, d3 = st.columns([2, 0.5, 2, 0.5, 2])
+            with d1:
+                s_time = st.number_input("Setup Time (per batch)", value=10.0)
+                s_unit = st.selectbox("Setup Unit", ["Minutes", "Hours"], index=0)
+            with d_op1:
+                formula_op("+ B ×")
+            with d2:
+                p_time = st.number_input("Processing Time (per unit)", value=1.0)
+                p_unit = st.selectbox("Processing Unit", ["Minutes", "Hours"], index=0)
+
+        if st.button("Calculate Batch Capacity"):
+            s_min = to_minutes(s_time, s_unit)
+            p_min = to_minutes(p_time, p_unit)
+            denom = s_min + (b_size * p_min)
+            if denom > 0:
+                cap_min = b_size / denom
+                st.success(f"Capacity: **{cap_min:.4f} units/minute**")
+                st.info(f"({cap_min*60:.2f} units/hour)")
+
+    # --- Recommended Batch Size ---
+    with tab_batch_size:
+        st.subheader("Recommended Batch Size")
+        st.markdown(
+            "**Recommended Batch Size** finds the minimum batch size needed to achieve a desired flow rate. "
+            "This is the batch size that matches the process capacity to the desired throughput — "
+            "large enough to avoid being the bottleneck, but no larger (to minimize inventory)."
+        )
+        st.latex(r"\text{Recommended Batch Size} = \frac{\text{Flow Rate} \times \text{Setup Time}}{1 - \text{Flow Rate} \times \text{Time per Unit}}")
+
+        # Formula-style input — fraction layout
+        c_left, c_right = st.columns([1.5, 5])
+        with c_left:
+            st.markdown("")
+            st.markdown("")
+            st.markdown(
+                '<div style="text-align:right; font-size:1.15em; font-weight:600; '
+                'color:#333; padding-top:20px; line-height:1;">B &nbsp;=</div>',
+                unsafe_allow_html=True
+            )
+        with c_right:
+            # Numerator: Flow Rate × Setup Time
+            n1, n_op, n2 = st.columns([2, 0.5, 2])
+            with n1:
+                desired_fr = st.number_input("Desired Flow Rate", value=0.4, key="bs_fr")
+                fr_unit_bs = st.selectbox("Rate Unit", ["Units/Minute", "Units/Hour"], index=0, key="bs_fr_unit")
+            with n_op:
+                formula_op("×")
+            with n2:
+                setup_bs = st.number_input("Setup Time", value=120.0, key="bs_setup")
+                setup_unit_bs = st.selectbox("Setup Unit", ["Minutes", "Hours"], index=0, key="bs_setup_unit")
+            # Fraction bar
+            st.markdown(
+                '<hr style="margin: 2px 0; border: none; border-top: 2px solid #555;">',
+                unsafe_allow_html=True
+            )
+            # Denominator: 1 - Flow Rate × Time per unit
+            d_one, d_minus, d_fr, d_mul, d_p = st.columns([0.4, 0.3, 1.5, 0.3, 2])
+            with d_one:
+                formula_text("1")
+            with d_minus:
+                formula_op("−")
+            with d_fr:
+                formula_text("Flow Rate")
+            with d_mul:
+                formula_op("×")
+            with d_p:
+                proc_bs = st.number_input("Processing Time per Unit", value=2.0, key="bs_proc")
+                proc_unit_bs = st.selectbox("Processing Unit", ["Minutes", "Hours"], index=0, key="bs_proc_unit")
+
+        if st.button("Calculate Recommended Batch Size"):
+            # Normalize to minutes
+            setup_min = to_minutes(setup_bs, setup_unit_bs)
+            proc_min = to_minutes(proc_bs, proc_unit_bs)
+
+            # Normalize flow rate to units/minute
+            if fr_unit_bs == "Units/Hour":
+                fr_per_min = desired_fr / 60
+            else:
+                fr_per_min = desired_fr
+
+            denominator = 1 - (fr_per_min * proc_min)
+
+            if denominator <= 0:
+                st.error(
+                    "The desired flow rate exceeds the maximum possible capacity of "
+                    f"**{1/proc_min:.4f} units/min** ({60/proc_min:.2f} units/hr). "
+                    "Even with an infinitely large batch, this flow rate cannot be achieved."
+                )
+            elif fr_per_min <= 0:
+                st.error("Flow rate must be greater than 0.")
+            else:
+                numerator = fr_per_min * setup_min
+                batch = numerator / denominator
+
+                st.divider()
+                c1, c2 = st.columns(2)
+                c1.metric("Recommended Batch Size", f"{batch:.1f} units")
+                c2.metric("Rounded Up", f"{math.ceil(batch)} units")
+
+                # Verify: show the capacity at this batch size
+                verify_cap = batch / (setup_min + batch * proc_min)
+                st.info(
+                    f"Verification — Capacity at batch size {batch:.1f}: "
+                    f"**{verify_cap:.4f} units/min** ({verify_cap*60:.2f} units/hr)"
+                )
+
+    # --- Economic Order Quantity (EOQ) ---
+    with tab_eoq:
+        st.subheader("Economic Order Quantity (EOQ)")
+        st.markdown(
+            "**EOQ** finds the optimal order size that minimizes the total of ordering costs and "
+            "inventory holding costs. Ordering more at once reduces ordering frequency (lower ordering costs) "
+            "but increases average inventory (higher holding costs). EOQ balances these two trade-offs."
+        )
+        st.latex(r"Q^* = \sqrt{\frac{2 \times C_o \times D}{C_h}}")
+        st.markdown(
+            "Where: **Q*** = optimal order quantity, **C_o** = fixed cost per order, "
+            "**D** = demand rate (units per period), **C_h** = holding cost per unit per period."
+        )
+        st.caption(
+            "**C_h** (holding cost) typically includes storage cost + capital cost. "
+            "Capital cost = unit price × cost of capital rate."
+        )
+
+        # Formula-style input — sqrt layout
+        c_left, c_right = st.columns([1.5, 5])
+        with c_left:
+            st.markdown("")
+            st.markdown("")
+            st.markdown(
+                '<div style="text-align:right; font-size:1.15em; font-weight:600; '
+                'color:#333; padding-top:20px; line-height:1;">Q* &nbsp;= &nbsp;√</div>',
+                unsafe_allow_html=True
+            )
+        with c_right:
+            # Numerator: 2 × Co × D
+            n_two, n_mul1, n_co, n_mul2, n_d = st.columns([0.4, 0.3, 2, 0.3, 2])
+            with n_two:
+                formula_text("2")
+            with n_mul1:
+                formula_op("×")
+            with n_co:
+                order_cost = st.number_input("Order Cost (Co)", value=85.0, key="eoq_co",
+                                             help="Fixed cost per order (e.g., shipping, admin)")
+            with n_mul2:
+                formula_op("×")
+            with n_d:
+                demand_eoq = st.number_input("Demand Rate (D)", value=50.0, key="eoq_d",
+                                             help="Demand in units per period")
+                demand_period = st.selectbox("Period", ["Per Day", "Per Week", "Per Month", "Per Year"], index=2, key="eoq_d_period")
+            # Fraction bar
+            st.markdown(
+                '<hr style="margin: 2px 0; border: none; border-top: 2px solid #555;">',
+                unsafe_allow_html=True
+            )
+            # Denominator: Ch
+            d_ch, d_pad = st.columns([3, 3])
+            with d_ch:
+                holding_cost = st.number_input("Holding Cost per unit per period (Ch)", value=1.5, key="eoq_ch",
+                                               help="Inventory holding cost per unit per period (storage + capital cost)")
+
+        if st.button("Calculate EOQ"):
+            if order_cost <= 0 or demand_eoq <= 0 or holding_cost <= 0:
+                st.error("All values (Co, D, Ch) must be greater than 0.")
+            else:
+                q_star = math.sqrt(2 * order_cost * demand_eoq / holding_cost)
+
+                # Number of orders per period
+                orders_per_period = demand_eoq / q_star
+
+                # Average inventory
+                avg_inventory = q_star / 2
+
+                # Average inventory holding cost per period
+                avg_holding_cost = holding_cost * avg_inventory
+
+                # Average ordering cost per period
+                avg_ordering_cost = order_cost * orders_per_period
+
+                # Total cost per period (excluding purchase cost)
+                total_cost = avg_holding_cost + avg_ordering_cost
+
+                # Time between orders (in periods)
+                time_between_orders = q_star / demand_eoq
+
+                st.divider()
+                st.markdown("### Optimal Order")
+                c1, c2 = st.columns(2)
+                c1.metric("Optimal Order Quantity (Q*)", f"{q_star:.1f} units")
+                c2.metric("Rounded", f"{math.ceil(q_star)} units")
+
+                st.divider()
+                st.markdown("### Order Schedule")
+                c1, c2, c3 = st.columns(3)
+                period_label = demand_period.replace("Per ", "").lower()
+                c1.metric(f"Orders / {period_label}", f"{orders_per_period:.2f}")
+                c2.metric(f"Time Between Orders", f"{time_between_orders:.2f} {period_label}s")
+                c3.metric("Avg Inventory", f"{avg_inventory:.1f} units")
+
+                st.divider()
+                st.markdown(f"### Costs (per {period_label})")
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Inventory Holding Cost", f"${avg_holding_cost:.2f}")
+                c2.metric("Ordering Cost", f"${avg_ordering_cost:.2f}")
+                c3.metric("Total (Holding + Ordering)", f"${total_cost:.2f}")
+
+                st.info(
+                    f"At EOQ, holding cost (${avg_holding_cost:.2f}) ≈ ordering cost (${avg_ordering_cost:.2f}). "
+                    f"This is a property of the EOQ formula — the two costs are equal at the optimum."
+                )
 
 # ==========================================
 # WEEK 5: QUEUING & THROUGHPUT LOSS
 # ==========================================
 elif week_selection == "Week 5: Queuing Theory & Throughput Loss":
     st.header("Week 5: Queuing & Capacity")
-    tab_queue, tab_loss, tab_abandon = st.tabs(["Waiting Time (Queue)", "Throughput Loss (Erlang Loss)", "Adjusted Wait (Willingness to Wait)"])
+    tab_queue, tab_inv_queue, tab_loss, tab_abandon = st.tabs(["Waiting Time (Queue)", "Inventory in Queue", "Throughput Loss (Erlang Loss)", "Adjusted Wait (Willingness to Wait)"])
 
     # --- Standard Queue (G/G/m) ---
     with tab_queue:
@@ -485,6 +681,120 @@ Where: **p** = processing time, **m** = number of servers, **u** = utilization (
                     term3 = (cv_a**2 + cv_p**2) / 2
                     tq = term1 * term2 * term3
                     st.success(f"Avg Waiting Time: **{tq:.2f} mins**")
+
+    # --- Inventory in Queue ---
+    with tab_inv_queue:
+        st.subheader("Inventory in the Queue")
+        st.markdown(
+            "**Inventory in the Queue** calculates the average number of flow units (customers, jobs) "
+            "waiting in line and being served. Uses the G/G/m queuing model to derive waiting time, "
+            "then applies Little's Law to convert to inventory measures."
+        )
+        st.latex(r"I_q = \frac{1}{a} \times T_q \qquad \text{(inventory waiting)}")
+        st.latex(r"I_p = u \times m \qquad \text{(inventory in service)}")
+        st.latex(r"I = I_q + I_p \qquad \text{(total inventory)}")
+        st.markdown(
+            "Where: **a** = interarrival time, **T_q** = waiting time in queue (from G/G/m formula), "
+            "**u** = utilization, **m** = number of servers, **I_q** = avg units waiting, "
+            "**I_p** = avg units being served, **I** = total avg units in system."
+        )
+
+        # Formula-style input — Row 1: Utilization sub-formula
+        st.markdown("**Utilization:**")
+        u_lbl, u_eq, u_p, u_div, u_br1, u_a, u_mul, u_m, u_br2 = st.columns(
+            [0.5, 0.3, 1.8, 0.3, 0.2, 1.8, 0.3, 1.2, 0.2]
+        )
+        with u_lbl:
+            formula_label("u")
+        with u_eq:
+            formula_op("=")
+        with u_p:
+            p_iq_val = st.number_input("Processing Time (p)", value=6.0, key="iq_p")
+            p_iq_unit = st.selectbox("Unit (p)", ["Seconds", "Minutes", "Hours"], index=1, key="iq_p_unit")
+        with u_div:
+            formula_op("÷")
+        with u_br1:
+            formula_text("(")
+        with u_a:
+            a_iq_val = st.number_input("Interarrival Time (a)", value=5.0, key="iq_a")
+            a_iq_unit = st.selectbox("Unit (a)", ["Seconds", "Minutes", "Hours"], index=1, key="iq_a_unit")
+        with u_mul:
+            formula_op("×")
+        with u_m:
+            m_iq = st.number_input("Servers (m)", min_value=1, value=2, key="iq_m")
+        with u_br2:
+            formula_text(")")
+
+        # Formula-style input — Row 2: Variability sub-formula
+        st.markdown("**Variability:**")
+        v_br1, v_cva, v_plus, v_cvp, v_br2, v_div, v_two = st.columns(
+            [0.2, 2, 0.3, 2, 0.2, 0.3, 0.5]
+        )
+        with v_br1:
+            formula_text("(")
+        with v_cva:
+            cv_a_iq = st.number_input("CV of Arrivals (CVa)", value=1.0, key="iq_cva")
+        with v_plus:
+            formula_op("+")
+        with v_cvp:
+            cv_p_iq = st.number_input("CV of Process (CVp)", value=0.5, key="iq_cvp")
+        with v_br2:
+            formula_text(")")
+        with v_div:
+            formula_op("÷")
+        with v_two:
+            formula_text("2")
+
+        # Normalize to Minutes
+        a_iq_min = to_minutes(a_iq_val, a_iq_unit)
+        p_iq_min = to_minutes(p_iq_val, p_iq_unit)
+
+        if st.button("Calculate Inventory in Queue"):
+            if a_iq_min > 0 and m_iq > 0:
+                util_iq = p_iq_min / (a_iq_min * m_iq)
+                st.metric("Utilization", f"{util_iq:.2%}")
+
+                if util_iq >= 1.0:
+                    st.error(
+                        "System Unstable (u >= 100%) — queue grows without bound, "
+                        "inventory approaches infinity."
+                    )
+                elif util_iq > 0:
+                    # Calculate Tq using G/G/m formula
+                    term1 = p_iq_min / m_iq
+                    exponent = math.sqrt(2 * (m_iq + 1)) - 1
+                    term2 = (util_iq ** exponent) / (1 - util_iq)
+                    term3 = (cv_a_iq**2 + cv_p_iq**2) / 2
+                    tq_iq = term1 * term2 * term3
+
+                    # Inventory measures
+                    flow_rate = 1 / a_iq_min  # units per minute
+                    iq = flow_rate * tq_iq     # inventory waiting in queue
+                    ip = util_iq * m_iq        # inventory in service
+                    i_total = iq + ip          # total inventory
+
+                    # Flow time
+                    t_total = tq_iq + p_iq_min
+
+                    st.divider()
+                    st.markdown("### Time Measures")
+                    c1, c2 = st.columns(2)
+                    c1.metric("Waiting Time (Tq)", f"{tq_iq:.2f} min")
+                    c2.metric("Flow Time (T = Tq + p)", f"{t_total:.2f} min")
+
+                    st.divider()
+                    st.markdown("### Inventory Measures")
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Inventory in Queue (Iq)", f"{iq:.2f} units",
+                              help="Avg number of units waiting to be served")
+                    c2.metric("Inventory in Service (Ip)", f"{ip:.2f} units",
+                              help="Avg number of units currently being served")
+                    c3.metric("Total Inventory (I)", f"{i_total:.2f} units",
+                              help="Total avg units in the system (waiting + in service)")
+                else:
+                    st.info("No demand — all inventory measures are 0.")
+            else:
+                st.error("Interarrival time and number of servers must be greater than 0.")
 
     # --- Throughput Loss (Erlang Loss) ---
     with tab_loss:
