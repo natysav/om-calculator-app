@@ -92,7 +92,8 @@ week_selection = st.sidebar.selectbox(
         "Week 3: Capacity & Labor",
         "Week 4: Batches & Setup",
         "Week 5: Queuing Theory & Throughput Loss",
-        "Week 6: Process Quality & Takt Time"
+        "Week 6: Process Quality & Takt Time",
+        "Week 7: Manish & Adele Wedding"
     ]
 )
 
@@ -1372,3 +1373,220 @@ elif week_selection == "Week 6: Process Quality & Takt Time":
                 st.warning(f"Loss rate is {p_loss_input:.0%} — consider adding capacity or reducing processing time.")
             elif p_loss_input > 0:
                 st.info(f"Loss rate of {p_loss_input:.0%} is within typical ranges for many service systems.")
+
+# ==========================================
+# WEEK 7: MANISH & ADELE WEDDING
+# ==========================================
+elif week_selection == "Week 7: Manish & Adele Wedding":
+    st.header("Week 7: Manish & Adele Wedding \U0001f492")
+    st.markdown("Apply **Operations Management** principles to plan the perfect wedding. Use the tabs below to manage guests, catering, budget, and the reception queue.")
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "Guest & Seating Planner",
+        "Catering Estimator",
+        "Budget Breakdown",
+        "Reception Queue (Little's Law)"
+    ])
+
+    # --------------------------------------------------
+    # TAB 1: Guest & Seating Planner
+    # --------------------------------------------------
+    with tab1:
+        st.subheader("Guest & Seating Planner")
+        st.markdown("Calculate expected attendance, tables required, and venue utilisation.")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            total_invited = st.number_input("Total Guests Invited", min_value=1, value=150, step=1, key="w7_invited")
+            rsvp_rate = st.number_input("Expected RSVP / Attendance Rate (%)", min_value=0.0, max_value=100.0, value=80.0, step=0.5, key="w7_rsvp")
+        with col2:
+            seats_per_table = st.number_input("Seats per Table", min_value=1, value=10, step=1, key="w7_seats")
+            venue_capacity = st.number_input("Venue Capacity (max guests)", min_value=1, value=130, step=1, key="w7_venue")
+
+        if st.button("Calculate Seating", key="w7_seat_btn"):
+            expected_guests = round(total_invited * (rsvp_rate / 100))
+            tables_needed = math.ceil(expected_guests / seats_per_table)
+            utilisation = expected_guests / venue_capacity if venue_capacity > 0 else 0
+
+            st.divider()
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Expected Guests", f"{expected_guests}")
+            c2.metric("Tables Needed", f"{tables_needed}")
+            c3.metric("Seats Available", f"{tables_needed * seats_per_table}")
+            c4.metric("Venue Utilisation", f"{utilisation:.1%}")
+
+            empty_seats = tables_needed * seats_per_table - expected_guests
+            st.caption(f"Empty seats per arrangement: **{empty_seats}**")
+
+            if utilisation > 1.0:
+                st.error(f"Venue capacity exceeded! ({expected_guests} guests vs {venue_capacity} capacity). Consider a larger venue or reduce the guest list.")
+            elif utilisation > 0.90:
+                st.warning(f"Venue is at {utilisation:.0%} utilisation — very tight. Have a contingency plan ready.")
+            else:
+                st.success(f"Venue utilisation is {utilisation:.0%} — comfortable fit for the celebration!")
+
+    # --------------------------------------------------
+    # TAB 2: Catering Estimator
+    # --------------------------------------------------
+    with tab2:
+        st.subheader("Catering Estimator")
+        st.markdown("Estimate food, drinks, and catering cost for the wedding reception.")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            num_guests_cat = st.number_input("Number of Guests", min_value=1, value=120, step=1, key="w7_cat_guests")
+            cost_per_head = st.number_input("Meal Cost per Guest ($)", min_value=0.0, value=85.0, step=5.0, key="w7_cost_head")
+            reception_hours = st.number_input("Reception Duration (hours)", min_value=0.5, value=5.0, step=0.5, key="w7_rec_hours")
+        with col2:
+            drinks_per_hour = st.number_input("Drinks per Guest per Hour", min_value=0.0, value=2.0, step=0.5, key="w7_drinks_hr")
+            cost_per_drink = st.number_input("Cost per Drink ($)", min_value=0.0, value=8.0, step=0.5, key="w7_drink_cost")
+            cake_cost = st.number_input("Wedding Cake Cost ($)", min_value=0.0, value=600.0, step=50.0, key="w7_cake")
+
+        if st.button("Estimate Catering Cost", key="w7_cat_btn"):
+            total_drinks = num_guests_cat * drinks_per_hour * reception_hours
+            food_cost = num_guests_cat * cost_per_head
+            drinks_cost = total_drinks * cost_per_drink
+            total_catering = food_cost + drinks_cost + cake_cost
+
+            st.divider()
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Total Food Cost", f"${food_cost:,.2f}")
+            c2.metric("Total Drinks Cost", f"${drinks_cost:,.2f}")
+            c3.metric("Wedding Cake", f"${cake_cost:,.2f}")
+
+            st.divider()
+            st.metric("Total Catering Cost", f"${total_catering:,.2f}", delta=f"${total_catering/num_guests_cat:.2f} per guest")
+
+            import pandas as pd
+            breakdown_df = pd.DataFrame({
+                "Category": ["Food (meals)", "Drinks", "Wedding Cake", "Total"],
+                "Cost ($)": [f"${food_cost:,.2f}", f"${drinks_cost:,.2f}", f"${cake_cost:,.2f}", f"${total_catering:,.2f}"],
+                "% of Catering": [
+                    f"{food_cost/total_catering:.1%}" if total_catering > 0 else "—",
+                    f"{drinks_cost/total_catering:.1%}" if total_catering > 0 else "—",
+                    f"{cake_cost/total_catering:.1%}" if total_catering > 0 else "—",
+                    "100%"
+                ]
+            })
+            st.dataframe(breakdown_df, use_container_width=True, hide_index=True)
+
+    # --------------------------------------------------
+    # TAB 3: Budget Breakdown
+    # --------------------------------------------------
+    with tab3:
+        st.subheader("Wedding Budget Breakdown")
+        st.markdown("Allocate your total budget across key wedding categories and check against actuals.")
+
+        total_budget = st.number_input("Total Wedding Budget ($)", min_value=0.0, value=30000.0, step=500.0, key="w7_budget")
+
+        st.markdown("#### Budget Allocations")
+        col1, col2 = st.columns(2)
+        with col1:
+            venue_pct    = st.slider("Venue (%)",               0, 100, 30, key="w7_b_venue")
+            catering_pct = st.slider("Catering (%)",            0, 100, 35, key="w7_b_cat")
+            photo_pct    = st.slider("Photography/Video (%)",   0, 100, 12, key="w7_b_photo")
+            flowers_pct  = st.slider("Flowers & Decor (%)",     0, 100, 8,  key="w7_b_flowers")
+        with col2:
+            music_pct    = st.slider("Music/Entertainment (%)", 0, 100, 5,  key="w7_b_music")
+            attire_pct   = st.slider("Attire & Styling (%)",    0, 100, 5,  key="w7_b_attire")
+            transport_pct= st.slider("Transport (%)",           0, 100, 2,  key="w7_b_trans")
+            misc_pct     = st.slider("Miscellaneous (%)",       0, 100, 3,  key="w7_b_misc")
+
+        if st.button("Calculate Budget Allocation", key="w7_budget_btn"):
+            total_pct = venue_pct + catering_pct + photo_pct + flowers_pct + music_pct + attire_pct + transport_pct + misc_pct
+
+            categories = ["Venue", "Catering", "Photography/Video", "Flowers & Decor",
+                          "Music/Entertainment", "Attire & Styling", "Transport", "Miscellaneous"]
+            percentages = [venue_pct, catering_pct, photo_pct, flowers_pct,
+                           music_pct, attire_pct, transport_pct, misc_pct]
+            amounts = [total_budget * p / 100 for p in percentages]
+
+            import pandas as pd
+            df = pd.DataFrame({
+                "Category": categories,
+                "Allocation (%)": [f"{p}%" for p in percentages],
+                "Budget Amount ($)": [f"${a:,.2f}" for a in amounts]
+            })
+
+            st.divider()
+            st.dataframe(df, use_container_width=True, hide_index=True)
+
+            st.divider()
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Total Budget", f"${total_budget:,.2f}")
+            c2.metric("Total Allocated", f"${total_budget * total_pct / 100:,.2f}")
+            c3.metric("Allocations Sum", f"{total_pct}%")
+
+            if total_pct > 100:
+                st.error(f"Allocations sum to {total_pct}% — over budget by {total_pct - 100}%. Reduce some categories.")
+            elif total_pct < 100:
+                leftover = total_budget * (100 - total_pct) / 100
+                st.warning(f"Allocations sum to {total_pct}% — ${leftover:,.2f} unallocated. Consider adding to Miscellaneous or savings buffer.")
+            else:
+                st.success("Allocations sum to exactly 100% — perfect budget balance!")
+
+    # --------------------------------------------------
+    # TAB 4: Reception Queue — Little's Law
+    # --------------------------------------------------
+    with tab4:
+        st.subheader("Reception Queue — Little's Law")
+        st.markdown(
+            "Apply **Little's Law** (L = \u03bbW) to the wedding receiving line. "
+            "Find out how long guests wait to greet the couple and how many are in the queue at any time."
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            arrival_rate_rl = st.number_input("Guest Arrival Rate (guests / minute)", min_value=0.1, value=3.0, step=0.1, key="w7_rl_arr")
+            service_time_rl = st.number_input("Average Greeting Time per Guest (minutes)", min_value=0.1, value=1.5, step=0.1, key="w7_rl_svc")
+        with col2:
+            num_greeters   = st.number_input("Number of Greeters (servers)", min_value=1, value=2, step=1, key="w7_rl_greet")
+            total_arriving = st.number_input("Total Guests Expected in Receiving Line", min_value=1, value=100, step=1, key="w7_rl_total")
+
+        if st.button("Analyse Receiving Line", key="w7_rl_btn"):
+            # Throughput (capacity of receiving line)
+            capacity = num_greeters / service_time_rl  # guests per minute
+
+            # Utilisation
+            utilisation_rl = arrival_rate_rl / capacity
+
+            if utilisation_rl >= 1.0:
+                st.error(
+                    f"Utilisation is {utilisation_rl:.1%} — the receiving line cannot keep up with arrivals! "
+                    f"Add more greeters or shorten greetings."
+                )
+            else:
+                # M/M/c approximation for average number in system using simple single-server proxy
+                # For simplicity: use Kingman-style approximation with rho
+                rho = utilisation_rl
+
+                # Average wait in queue (M/M/1 approximation scaled)
+                Wq = (rho * service_time_rl) / (num_greeters * (1 - rho))
+                # Average time in system
+                W = Wq + service_time_rl
+                # Average guests in system (Little's Law: L = lambda * W)
+                L = arrival_rate_rl * W
+                # Average guests in queue
+                Lq = arrival_rate_rl * Wq
+                # Time to clear all guests through
+                time_to_clear = total_arriving / capacity
+
+                st.divider()
+                c1, c2 = st.columns(2)
+                c1.metric("Receiving Line Utilisation", f"{utilisation_rl:.1%}")
+                c2.metric("Line Capacity", f"{capacity:.2f} guests/min")
+
+                st.divider()
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Avg Guests in System (L)", f"{L:.1f}")
+                c2.metric("Avg Guests in Queue (Lq)", f"{Lq:.1f}")
+                c3.metric("Avg Wait in Queue (Wq)", f"{Wq:.2f} min")
+                c4.metric("Avg Time in System (W)", f"{W:.2f} min")
+
+                st.divider()
+                st.metric("Estimated Time to Clear All Guests", f"{time_to_clear:.1f} minutes ({time_to_clear/60:.2f} hrs)")
+
+                if utilisation_rl > 0.80:
+                    st.warning(f"High utilisation ({utilisation_rl:.0%}). Queue could grow long during peak arrivals. Consider more greeters.")
+                else:
+                    st.success(f"Receiving line is well-managed at {utilisation_rl:.0%} utilisation. Guests should flow smoothly!")
