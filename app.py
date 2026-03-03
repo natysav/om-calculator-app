@@ -91,15 +91,16 @@ MODULE_OPTIONS = [
     "Week 8: Fitness Passport"
 ]
 
-if "module" not in st.session_state:
-    st.session_state["module"] = "🏠 Home"
+if "_nav" not in st.session_state:
+    st.session_state["_nav"] = "🏠 Home"
 
 week_selection = st.sidebar.selectbox(
     "Select Module",
     MODULE_OPTIONS,
-    index=MODULE_OPTIONS.index(st.session_state["module"]),
-    key="module"
+    index=MODULE_OPTIONS.index(st.session_state["_nav"]),
 )
+# Keep _nav in sync with the sidebar so buttons and sidebar stay consistent
+st.session_state["_nav"] = week_selection
 
 # ==========================================
 # ==========================================
@@ -222,7 +223,7 @@ if week_selection == "🏠 Home":
             </div>
             """, unsafe_allow_html=True)
             if st.button(f"Open {mod['week']} →", key=f"nav_{mod['nav_key']}", use_container_width=True):
-                st.session_state["module"] = mod["nav_key"]
+                st.session_state["_nav"] = mod["nav_key"]
                 st.rerun()
 
     st.markdown("<hr style='margin:24px 0; border:none; border-top:2px solid #e0e0e0;'>", unsafe_allow_html=True)
