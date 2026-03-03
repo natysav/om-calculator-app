@@ -78,29 +78,170 @@ def formula_text(text):
 # ==========================================
 st.set_page_config(page_title="Operations Management Toolkit", layout="wide", page_icon="🏭")
 
-st.title("🏭 Operations Management Toolkit")
-st.markdown("""
-Select a **Week** from the sidebar. Time units are **automatically converted** to ensure accuracy.
-""")
-
 # --- Sidebar Navigation ---
 week_selection = st.sidebar.selectbox(
     "Select Module",
     [
+        "🏠 Home",
         "Week 1: Process Fundamentals",
         "Week 2: Inventory & Little's Law",
         "Week 3: Capacity & Labor",
         "Week 4: Batches & Setup",
         "Week 5: Queuing Theory & Throughput Loss",
         "Week 6: Process Quality & Takt Time",
-        "Week 7: Manish & Adele Wedding"
+        "Week 7: Manish & Adele Wedding",
+        "Week 8: Fitness Passport"
     ]
 )
 
 # ==========================================
+# ==========================================
+# HOME / LAUNCH PAGE
+# ==========================================
+if week_selection == "🏠 Home":
+    st.markdown("""
+    <div style="text-align:center; padding: 30px 0 10px 0;">
+        <span style="font-size:4em;">🏭</span>
+        <h1 style="font-size:2.6em; font-weight:800; margin:10px 0 4px 0; color:#1a1a2e;">
+            Operations Management Toolkit
+        </h1>
+        <p style="font-size:1.2em; color:#555; max-width:680px; margin:0 auto;">
+            An interactive learning companion for mastering Operations Management concepts —
+            from process fundamentals to fitness analytics.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<hr style='margin:24px 0; border:none; border-top:2px solid #e0e0e0;'>", unsafe_allow_html=True)
+
+    st.subheader("📚 Course Modules")
+    st.markdown("Choose any module from the **sidebar** to launch its interactive calculators.")
+
+    modules = [
+        {
+            "icon": "⚙️",
+            "week": "Week 1",
+            "title": "Process Fundamentals",
+            "desc": "Calculate Flow Rate, Cycle Time, and identify Process Bottlenecks.",
+            "tools": ["Flow Rate Calculator", "Cycle Time Calculator", "Process Capacity (Bottleneck)"],
+            "color": "#e8f4fd"
+        },
+        {
+            "icon": "📦",
+            "week": "Week 2",
+            "title": "Inventory & Little's Law",
+            "desc": "Apply Little's Law to manage inventory and measure turns.",
+            "tools": ["Little's Law (I = R × T)", "Inventory Turns"],
+            "color": "#e8fdf4"
+        },
+        {
+            "icon": "👷",
+            "week": "Week 3",
+            "title": "Capacity & Labor",
+            "desc": "Analyze labor costs, utilization, and implied capacity.",
+            "tools": ["Labor Cost", "Implied Utilization", "Utilization", "Labor Content"],
+            "color": "#fdf4e8"
+        },
+        {
+            "icon": "📦",
+            "week": "Week 4",
+            "title": "Batches & Setup",
+            "desc": "Optimize batch sizes with EOQ and setup-time analysis.",
+            "tools": ["Capacity with Batching", "Recommended Batch Size", "EOQ Calculator"],
+            "color": "#f4e8fd"
+        },
+        {
+            "icon": "⏳",
+            "week": "Week 5",
+            "title": "Queuing Theory & Throughput Loss",
+            "desc": "Model waiting times, queue lengths, and Erlang loss rates.",
+            "tools": ["Waiting Time (Queue)", "Inventory in Queue", "Erlang Loss", "Adjusted Wait"],
+            "color": "#fde8e8"
+        },
+        {
+            "icon": "📊",
+            "week": "Week 6",
+            "title": "Process Quality & Takt Time",
+            "desc": "Measure process capability, control limits, and production rhythm.",
+            "tools": ["Process Capability (k-sigma)", "Control Limits (UCL/LCL)", "Takt Time", "Customer Lost Rate"],
+            "color": "#e8fde8"
+        },
+        {
+            "icon": "💍",
+            "week": "Week 7",
+            "title": "Manish & Adele Wedding",
+            "desc": "Apply OM principles to real-world event planning.",
+            "tools": ["Guest & Seating Planner", "Catering Estimator", "Budget Breakdown", "Reception Queue"],
+            "color": "#fdf0e8"
+        },
+        {
+            "icon": "🏃",
+            "week": "Week 8",
+            "title": "Fitness Passport",
+            "desc": "Track fitness goals, calculate calories burned, and optimize workout scheduling using OM tools.",
+            "tools": ["Passport Progress Tracker", "Calorie & MET Calculator", "Gym Capacity & Flow", "Training Load & Recovery"],
+            "color": "#e8f8fd"
+        },
+    ]
+
+    cols = st.columns(2)
+    for i, mod in enumerate(modules):
+        with cols[i % 2]:
+            tools_html = "".join(
+                f'<span style="display:inline-block; background:#fff; border:1px solid #ccc; border-radius:12px; '
+                f'padding:2px 10px; margin:3px 3px 3px 0; font-size:0.82em; color:#444;">{t}</span>'
+                for t in mod["tools"]
+            )
+            st.markdown(f"""
+            <div style="background:{mod['color']}; border-radius:12px; padding:18px 20px; margin-bottom:16px;
+                        border:1px solid #ddd; min-height:170px;">
+                <div style="font-size:1.6em;">{mod['icon']}</div>
+                <div style="font-size:0.8em; color:#888; font-weight:600; letter-spacing:0.05em; margin-top:2px;">
+                    {mod['week']}
+                </div>
+                <div style="font-size:1.15em; font-weight:700; color:#1a1a2e; margin:4px 0 6px 0;">
+                    {mod['title']}
+                </div>
+                <div style="font-size:0.92em; color:#555; margin-bottom:10px;">{mod['desc']}</div>
+                <div>{tools_html}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<hr style='margin:24px 0; border:none; border-top:2px solid #e0e0e0;'>", unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("""
+        <div style="background:#f9f9f9; border-radius:10px; padding:16px; text-align:center; border:1px solid #e0e0e0;">
+            <div style="font-size:2em;">⚡</div>
+            <div style="font-weight:700; margin:6px 0 4px;">Real-Time Calculations</div>
+            <div style="font-size:0.88em; color:#666;">All results update instantly as you adjust inputs — no submit button needed.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        <div style="background:#f9f9f9; border-radius:10px; padding:16px; text-align:center; border:1px solid #e0e0e0;">
+            <div style="font-size:2em;">📐</div>
+            <div style="font-weight:700; margin:6px 0 4px;">Formula-First Design</div>
+            <div style="font-size:0.88em; color:#666;">Inputs are laid out to mirror the mathematical formula, reinforcing learning.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div style="background:#f9f9f9; border-radius:10px; padding:16px; text-align:center; border:1px solid #e0e0e0;">
+            <div style="font-size:2em;">🔄</div>
+            <div style="font-weight:700; margin:6px 0 4px;">Auto Unit Conversion</div>
+            <div style="font-size:0.88em; color:#666;">Time units are automatically converted so you can mix seconds, minutes, and hours freely.</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.info("**Tip:** Use the sidebar dropdown to jump directly to any week's calculators.")
+
+# ==========================================
 # WEEK 1: PROCESS FUNDAMENTALS
 # ==========================================
-if week_selection == "Week 1: Process Fundamentals":
+elif week_selection == "Week 1: Process Fundamentals":
     st.header("Week 1: Process Fundamentals")
 
     tab1, tab2, tab3 = st.tabs(["Flow Rate", "Cycle Time", "Process Capacity"])
@@ -1590,3 +1731,366 @@ elif week_selection == "Week 7: Manish & Adele Wedding":
                     st.warning(f"High utilisation ({utilisation_rl:.0%}). Queue could grow long during peak arrivals. Consider more greeters.")
                 else:
                     st.success(f"Receiving line is well-managed at {utilisation_rl:.0%} utilisation. Guests should flow smoothly!")
+
+# ==========================================
+# WEEK 8: FITNESS PASSPORT
+# ==========================================
+elif week_selection == "Week 8: Fitness Passport":
+    st.header("Week 8: Fitness Passport 🏃")
+    st.markdown("""
+    Apply **Operations Management** principles to your personal fitness journey.
+    Track passport completion, calculate calorie burn, analyse gym capacity, and plan your training load.
+    """)
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🗺️ Passport Progress",
+        "🔥 Calorie & MET",
+        "🏋️ Gym Capacity & Flow",
+        "📈 Training Load & Recovery"
+    ])
+
+    # ── TAB 1: PASSPORT PROGRESS TRACKER ──────────────────────────────────────
+    with tab1:
+        st.subheader("Fitness Passport Progress Tracker")
+        st.markdown(
+            "A **Fitness Passport** awards a stamp for each unique activity you complete. "
+            "Track your stamps below to see how close you are to finishing the passport."
+        )
+        st.latex(r"\text{Completion \%} = \frac{\text{Stamps Earned}}{\text{Total Stamps Required}} \times 100")
+
+        st.divider()
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            total_required = st.number_input("Total Stamps Required", min_value=1, value=10, step=1)
+        with col_b:
+            stamps_earned = st.number_input("Stamps Earned So Far", min_value=0, value=0, step=1)
+
+        stamps_earned = min(stamps_earned, total_required)
+        stamps_remaining = total_required - stamps_earned
+        completion_pct = (stamps_earned / total_required) * 100
+
+        st.divider()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Stamps Earned", f"{int(stamps_earned)}")
+        c2.metric("Stamps Remaining", f"{int(stamps_remaining)}")
+        c3.metric("Completion", f"{completion_pct:.1f}%")
+
+        st.progress(completion_pct / 100)
+
+        st.divider()
+        st.markdown("#### Activity Planner")
+        st.markdown("Plan how many activities per week you need to finish the passport by your deadline.")
+
+        col_c, col_d = st.columns(2)
+        with col_c:
+            weeks_left = st.number_input("Weeks Remaining", min_value=1, value=4, step=1)
+        with col_d:
+            activities_per_week = math.ceil(stamps_remaining / weeks_left) if weeks_left > 0 else stamps_remaining
+
+        st.info(
+            f"To complete your passport in **{int(weeks_left)} week(s)** you need at least "
+            f"**{activities_per_week} activity/activities per week**."
+        )
+
+        if completion_pct == 100:
+            st.success("Passport complete! Great work — all stamps collected.")
+        elif completion_pct >= 75:
+            st.success(f"Almost there! You're {completion_pct:.0f}% done. Keep pushing!")
+        elif completion_pct >= 50:
+            st.warning(f"Halfway through at {completion_pct:.0f}%. Maintain momentum.")
+        else:
+            st.error(f"Only {completion_pct:.0f}% complete. Ramp up your activity pace.")
+
+        st.divider()
+        st.markdown("#### Activity Log")
+        activities_list = [
+            "Running / Jogging", "Cycling", "Swimming", "Weight Training",
+            "Yoga / Pilates", "Group Fitness Class", "Rock Climbing",
+            "Rowing / Kayaking", "HIIT / Circuit Training", "Walking (Brisk)",
+            "Sport (Basketball, Soccer, etc.)", "Dance Class", "Other"
+        ]
+        selected_activities = st.multiselect(
+            "Select activities you have completed (each counts as one stamp):",
+            activities_list
+        )
+        if selected_activities:
+            logged_count = len(selected_activities)
+            st.success(f"**{logged_count}** stamp(s) logged: {', '.join(selected_activities)}")
+            if logged_count > stamps_remaining:
+                st.warning("You have logged more activities than stamps remaining. Only stamps up to the required total count.")
+
+    # ── TAB 2: CALORIE & MET CALCULATOR ───────────────────────────────────────
+    with tab2:
+        st.subheader("Calorie Burn & MET Calculator")
+        st.markdown(
+            "The **Metabolic Equivalent of Task (MET)** measures exercise intensity. "
+            "Combined with body weight and duration, it gives an accurate calorie estimate."
+        )
+        st.latex(r"\text{Calories} = \text{MET} \times \text{Weight (kg)} \times \text{Duration (hrs)}")
+
+        st.divider()
+
+        met_activities = {
+            "Walking (3.5 mph)": 3.5,
+            "Walking (brisk, 4 mph)": 4.3,
+            "Running (5 mph / 12 min mile)": 8.3,
+            "Running (6 mph / 10 min mile)": 9.8,
+            "Running (7.5 mph / 8 min mile)": 11.8,
+            "Cycling (light, <10 mph)": 4.0,
+            "Cycling (moderate, 12–14 mph)": 8.0,
+            "Cycling (vigorous, >16 mph)": 10.0,
+            "Swimming (light)": 5.8,
+            "Swimming (vigorous)": 9.8,
+            "Weight Training (general)": 3.5,
+            "Weight Training (vigorous)": 6.0,
+            "HIIT / Circuit Training": 8.0,
+            "Yoga": 2.5,
+            "Pilates": 3.0,
+            "Group Fitness Class": 5.0,
+            "Rock Climbing": 7.5,
+            "Rowing (moderate)": 7.0,
+            "Basketball": 6.5,
+            "Soccer": 7.0,
+            "Dance Class": 5.5,
+            "Custom (enter MET below)": None,
+        }
+
+        col_x, col_y = st.columns(2)
+        with col_x:
+            activity_choice = st.selectbox("Select Activity", list(met_activities.keys()))
+        with col_y:
+            body_weight_kg = st.number_input("Body Weight (kg)", min_value=30.0, max_value=250.0, value=70.0, step=0.5)
+
+        if met_activities[activity_choice] is None:
+            met_value = st.number_input("Custom MET Value", min_value=1.0, max_value=23.0, value=5.0, step=0.1)
+        else:
+            met_value = met_activities[activity_choice]
+            st.info(f"MET for **{activity_choice}**: {met_value}")
+
+        col_dur, col_unit = st.columns(2)
+        with col_dur:
+            duration_val = st.number_input("Duration", min_value=1.0, value=30.0, step=1.0)
+        with col_unit:
+            duration_unit = st.selectbox("Unit", ["Minutes", "Hours", "Seconds"])
+
+        if duration_unit == "Minutes":
+            duration_hrs = duration_val / 60
+        elif duration_unit == "Seconds":
+            duration_hrs = duration_val / 3600
+        else:
+            duration_hrs = duration_val
+
+        calories = met_value * body_weight_kg * duration_hrs
+
+        st.divider()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("MET Value", f"{met_value}")
+        c2.metric("Duration", f"{duration_hrs * 60:.1f} min")
+        c3.metric("Calories Burned", f"{calories:.0f} kcal")
+
+        st.divider()
+        st.markdown("#### Weekly Calorie Goal Planner")
+        weekly_goal = st.number_input("Weekly Calorie Burn Goal (kcal)", min_value=100, value=2000, step=100)
+        sessions_needed = math.ceil(weekly_goal / calories) if calories > 0 else 0
+        st.info(
+            f"At **{calories:.0f} kcal per session**, you need **{sessions_needed} session(s) per week** "
+            f"to reach your goal of **{weekly_goal} kcal**."
+        )
+
+        progress_pct = min(calories / (weekly_goal / 7), 1.0)
+        st.markdown(f"**Daily calorie target progress (single session vs. daily share of weekly goal):**")
+        st.progress(progress_pct)
+
+    # ── TAB 3: GYM CAPACITY & FLOW ────────────────────────────────────────────
+    with tab3:
+        st.subheader("Gym Capacity & Flow Analysis")
+        st.markdown(
+            "Apply **Little's Law** and **utilisation** concepts to a fitness centre to identify "
+            "peak-hour bottlenecks and optimal staffing."
+        )
+
+        st.markdown("#### Little's Law: Average Members in the Gym")
+        st.latex(r"L = \lambda \times W")
+        st.markdown("where **L** = avg members in gym, **λ** = arrival rate (members/min), **W** = avg time spent (min)")
+
+        st.divider()
+        c_lbl, c_eq, c_lam, c_x, c_w = st.columns([1.5, 0.3, 2, 0.3, 2])
+        with c_lbl:
+            formula_label("Avg Members (L)")
+        with c_eq:
+            formula_op("=")
+        with c_lam:
+            arrival_rate_gym = st.number_input("Arrival Rate λ (members/min)", min_value=0.1, value=2.0, step=0.1)
+        with c_x:
+            formula_op("×")
+        with c_w:
+            avg_time_gym = st.number_input("Avg Time in Gym W (min)", min_value=1.0, value=60.0, step=5.0)
+
+        L_gym = arrival_rate_gym * avg_time_gym
+        st.divider()
+        st.metric("Average Members in Gym at Any Time (L)", f"{L_gym:.1f}")
+
+        st.divider()
+        st.markdown("#### Utilisation & Capacity")
+        st.latex(r"\text{Utilisation} = \frac{\lambda}{\mu \times m}")
+        st.markdown("where **μ** = capacity per station per minute, **m** = number of stations")
+
+        col_mu, col_m = st.columns(2)
+        with col_mu:
+            station_capacity = st.number_input(
+                "Station Service Rate μ (members/min per station)", min_value=0.01, value=0.5, step=0.01,
+                help="e.g. 0.5 means each station can serve 0.5 members/min (i.e. one member every 2 min)"
+            )
+        with col_m:
+            num_stations = st.number_input("Number of Stations / Equipment m", min_value=1, value=10, step=1)
+
+        total_capacity_gym = station_capacity * num_stations
+        utilisation_gym = arrival_rate_gym / total_capacity_gym if total_capacity_gym > 0 else float("inf")
+
+        c1, c2 = st.columns(2)
+        c1.metric("Total Gym Capacity (μ × m)", f"{total_capacity_gym:.2f} members/min")
+        c2.metric("Utilisation", f"{utilisation_gym:.1%}")
+
+        if utilisation_gym >= 1.0:
+            st.error(
+                f"Utilisation is {utilisation_gym:.1%} — the gym cannot handle this arrival rate! "
+                "Add equipment/stations or stagger membership access."
+            )
+        elif utilisation_gym > 0.85:
+            st.warning(f"High utilisation ({utilisation_gym:.1%}). Expect queues during peak hours.")
+        else:
+            st.success(f"Gym is operating at {utilisation_gym:.1%} utilisation — comfortable capacity.")
+
+        st.divider()
+        st.markdown("#### Queue Wait Time (M/M/1 Approximation)")
+        st.latex(r"W_q = \frac{\rho}{\mu \cdot (1 - \rho)}")
+
+        if utilisation_gym < 1.0:
+            rho_gym = utilisation_gym
+            service_time_gym = 1 / station_capacity if station_capacity > 0 else 0
+            Wq_gym = (rho_gym * service_time_gym) / (1 - rho_gym)
+            W_total_gym = Wq_gym + service_time_gym
+            Lq_gym = arrival_rate_gym * Wq_gym
+
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Avg Wait in Queue (Wq)", f"{Wq_gym:.2f} min")
+            c2.metric("Avg Time in System (W)", f"{W_total_gym:.2f} min")
+            c3.metric("Avg Members in Queue (Lq)", f"{Lq_gym:.1f}")
+        else:
+            st.error("Cannot compute queue — utilisation ≥ 100%. Queue grows without bound.")
+
+        st.divider()
+        st.markdown("#### Peak-Hour Planning")
+        peak_multiplier = st.slider("Peak-Hour Multiplier (vs. average)", min_value=1.0, max_value=5.0, value=2.0, step=0.1)
+        peak_arrival = arrival_rate_gym * peak_multiplier
+        peak_util = peak_arrival / total_capacity_gym if total_capacity_gym > 0 else float("inf")
+        st.info(
+            f"At peak hours (×{peak_multiplier:.1f} arrivals = **{peak_arrival:.2f} members/min**), "
+            f"utilisation rises to **{peak_util:.1%}**."
+        )
+        if peak_util >= 1.0:
+            stations_needed = math.ceil(peak_arrival / station_capacity)
+            st.warning(
+                f"Peak utilisation exceeds 100%. You need at least **{stations_needed} stations** "
+                f"to handle peak demand."
+            )
+
+    # ── TAB 4: TRAINING LOAD & RECOVERY ───────────────────────────────────────
+    with tab4:
+        st.subheader("Training Load & Recovery Planner")
+        st.markdown(
+            "**Training Load** (Arbitrary Units) combines session intensity and duration. "
+            "Use this planner to balance stress and recovery across your training week."
+        )
+        st.latex(r"\text{Training Load (AU)} = \text{RPE} \times \text{Duration (min)}")
+        st.markdown(
+            "**RPE** = Rate of Perceived Exertion (1–10 scale). "
+            "Session load is RPE × duration. Weekly load is the sum of all sessions."
+        )
+
+        st.divider()
+        st.markdown("#### Weekly Session Planner")
+
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        rpe_values = []
+        duration_values = []
+
+        cols_days = st.columns(7)
+        for i, day in enumerate(days):
+            with cols_days[i]:
+                st.markdown(f"**{day[:3]}**")
+                rpe = st.number_input(f"RPE ({day[:3]})", min_value=0, max_value=10, value=0, step=1, key=f"rpe_{day}")
+                dur = st.number_input(f"Min ({day[:3]})", min_value=0, max_value=300, value=0, step=5, key=f"dur_{day}")
+                rpe_values.append(rpe)
+                duration_values.append(dur)
+
+        session_loads = [r * d for r, d in zip(rpe_values, duration_values)]
+        weekly_load = sum(session_loads)
+        active_days = sum(1 for d in duration_values if d > 0)
+        rest_days = 7 - active_days
+
+        st.divider()
+        load_data = pd.DataFrame({
+            "Day": days,
+            "RPE": rpe_values,
+            "Duration (min)": duration_values,
+            "Session Load (AU)": session_loads
+        })
+        st.dataframe(load_data, use_container_width=True, hide_index=True)
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total Weekly Load (AU)", f"{weekly_load}")
+        c2.metric("Active Days", f"{active_days}")
+        c3.metric("Rest Days", f"{rest_days}")
+        avg_load = weekly_load / active_days if active_days > 0 else 0
+        c4.metric("Avg Session Load (AU)", f"{avg_load:.0f}")
+
+        st.divider()
+        st.markdown("#### Load Intensity Classification")
+        if weekly_load == 0:
+            st.info("Enter sessions above to see your training load assessment.")
+        elif weekly_load < 1000:
+            st.success(f"Weekly load of **{weekly_load} AU** is **Low** — good for recovery or beginners.")
+        elif weekly_load < 2000:
+            st.success(f"Weekly load of **{weekly_load} AU** is **Moderate** — balanced training stimulus.")
+        elif weekly_load < 3000:
+            st.warning(f"Weekly load of **{weekly_load} AU** is **High** — ensure adequate recovery.")
+        else:
+            st.error(f"Weekly load of **{weekly_load} AU** is **Very High** — risk of overtraining. Consider reducing volume or intensity.")
+
+        st.divider()
+        st.markdown("#### Acute : Chronic Workload Ratio (ACWR)")
+        st.latex(r"\text{ACWR} = \frac{\text{Acute Load (last 7 days)}}{\text{Chronic Load (28-day average)}}")
+        st.markdown(
+            "An ACWR between **0.8 – 1.3** is the 'sweet spot' for performance with low injury risk."
+        )
+
+        col_ac, col_ch = st.columns(2)
+        with col_ac:
+            acute_load = st.number_input("Acute Load (last 7 days, AU)", min_value=0, value=int(weekly_load), step=50)
+        with col_ch:
+            chronic_load = st.number_input("Chronic Load (4-week avg per week, AU)", min_value=1, value=max(1, int(weekly_load)), step=50)
+
+        acwr = acute_load / chronic_load if chronic_load > 0 else 0
+        c1, c2 = st.columns(2)
+        c1.metric("ACWR", f"{acwr:.2f}")
+        if acwr == 0:
+            c2.info("Enter load values above.")
+        elif acwr < 0.8:
+            c2.warning("ACWR below 0.8 — undertraining or detraining risk.")
+        elif acwr <= 1.3:
+            c2.success("ACWR in the sweet spot (0.8–1.3). Great training balance!")
+        else:
+            c2.error(f"ACWR of {acwr:.2f} is high (>1.3) — elevated injury risk. Reduce load this week.")
+
+        st.divider()
+        st.markdown("#### Recovery Time Estimator")
+        st.latex(r"\text{Recovery Hours} \approx \text{Session Load (AU)} \times 0.1")
+        st.markdown("Rule of thumb: every 10 AU of session load requires ~1 hour of recovery.")
+        max_session = max(session_loads) if session_loads else 0
+        recovery_hrs = max_session * 0.1
+        st.info(
+            f"Your hardest session this week has a load of **{max_session} AU**, "
+            f"suggesting ~**{recovery_hrs:.1f} hours** of recovery before the next hard effort."
+        )
