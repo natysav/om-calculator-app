@@ -79,19 +79,26 @@ def formula_text(text):
 st.set_page_config(page_title="Operations Management Toolkit", layout="wide", page_icon="🏭")
 
 # --- Sidebar Navigation ---
+MODULE_OPTIONS = [
+    "🏠 Home",
+    "Week 1: Process Fundamentals",
+    "Week 2: Inventory & Little's Law",
+    "Week 3: Capacity & Labor",
+    "Week 4: Batches & Setup",
+    "Week 5: Queuing Theory & Throughput Loss",
+    "Week 6: Process Quality & Takt Time",
+    "Week 7: Manish & Adele Wedding",
+    "Week 8: Fitness Passport"
+]
+
+if "module" not in st.session_state:
+    st.session_state["module"] = "🏠 Home"
+
 week_selection = st.sidebar.selectbox(
     "Select Module",
-    [
-        "🏠 Home",
-        "Week 1: Process Fundamentals",
-        "Week 2: Inventory & Little's Law",
-        "Week 3: Capacity & Labor",
-        "Week 4: Batches & Setup",
-        "Week 5: Queuing Theory & Throughput Loss",
-        "Week 6: Process Quality & Takt Time",
-        "Week 7: Manish & Adele Wedding",
-        "Week 8: Fitness Passport"
-    ]
+    MODULE_OPTIONS,
+    index=MODULE_OPTIONS.index(st.session_state["module"]),
+    key="module"
 )
 
 # ==========================================
@@ -115,7 +122,7 @@ if week_selection == "🏠 Home":
     st.markdown("<hr style='margin:24px 0; border:none; border-top:2px solid #e0e0e0;'>", unsafe_allow_html=True)
 
     st.subheader("📚 Course Modules")
-    st.markdown("Choose any module from the **sidebar** to launch its interactive calculators.")
+    st.markdown("Click **Open Module** on any card — or use the sidebar — to launch its calculators.")
 
     modules = [
         {
@@ -124,7 +131,8 @@ if week_selection == "🏠 Home":
             "title": "Process Fundamentals",
             "desc": "Calculate Flow Rate, Cycle Time, and identify Process Bottlenecks.",
             "tools": ["Flow Rate Calculator", "Cycle Time Calculator", "Process Capacity (Bottleneck)"],
-            "color": "#e8f4fd"
+            "color": "#e8f4fd",
+            "nav_key": "Week 1: Process Fundamentals"
         },
         {
             "icon": "📦",
@@ -132,7 +140,8 @@ if week_selection == "🏠 Home":
             "title": "Inventory & Little's Law",
             "desc": "Apply Little's Law to manage inventory and measure turns.",
             "tools": ["Little's Law (I = R × T)", "Inventory Turns"],
-            "color": "#e8fdf4"
+            "color": "#e8fdf4",
+            "nav_key": "Week 2: Inventory & Little's Law"
         },
         {
             "icon": "👷",
@@ -140,7 +149,8 @@ if week_selection == "🏠 Home":
             "title": "Capacity & Labor",
             "desc": "Analyze labor costs, utilization, and implied capacity.",
             "tools": ["Labor Cost", "Implied Utilization", "Utilization", "Labor Content"],
-            "color": "#fdf4e8"
+            "color": "#fdf4e8",
+            "nav_key": "Week 3: Capacity & Labor"
         },
         {
             "icon": "📦",
@@ -148,7 +158,8 @@ if week_selection == "🏠 Home":
             "title": "Batches & Setup",
             "desc": "Optimize batch sizes with EOQ and setup-time analysis.",
             "tools": ["Capacity with Batching", "Recommended Batch Size", "EOQ Calculator"],
-            "color": "#f4e8fd"
+            "color": "#f4e8fd",
+            "nav_key": "Week 4: Batches & Setup"
         },
         {
             "icon": "⏳",
@@ -156,7 +167,8 @@ if week_selection == "🏠 Home":
             "title": "Queuing Theory & Throughput Loss",
             "desc": "Model waiting times, queue lengths, and Erlang loss rates.",
             "tools": ["Waiting Time (Queue)", "Inventory in Queue", "Erlang Loss", "Adjusted Wait"],
-            "color": "#fde8e8"
+            "color": "#fde8e8",
+            "nav_key": "Week 5: Queuing Theory & Throughput Loss"
         },
         {
             "icon": "📊",
@@ -164,7 +176,8 @@ if week_selection == "🏠 Home":
             "title": "Process Quality & Takt Time",
             "desc": "Measure process capability, control limits, and production rhythm.",
             "tools": ["Process Capability (k-sigma)", "Control Limits (UCL/LCL)", "Takt Time", "Customer Lost Rate"],
-            "color": "#e8fde8"
+            "color": "#e8fde8",
+            "nav_key": "Week 6: Process Quality & Takt Time"
         },
         {
             "icon": "💍",
@@ -172,15 +185,17 @@ if week_selection == "🏠 Home":
             "title": "Manish & Adele Wedding",
             "desc": "Apply OM principles to real-world event planning.",
             "tools": ["Guest & Seating Planner", "Catering Estimator", "Budget Breakdown", "Reception Queue"],
-            "color": "#fdf0e8"
+            "color": "#fdf0e8",
+            "nav_key": "Week 7: Manish & Adele Wedding"
         },
         {
             "icon": "🏃",
             "week": "Week 8",
             "title": "Fitness Passport",
-            "desc": "Track fitness goals, calculate calories burned, and optimize workout scheduling using OM tools.",
-            "tools": ["Passport Progress Tracker", "Calorie & MET Calculator", "Gym Capacity & Flow", "Training Load & Recovery"],
-            "color": "#e8f8fd"
+            "desc": "Analyse Australia's corporate wellness program: member savings, employer ROI, facility revenue, and network capacity.",
+            "tools": ["Member Value Calculator", "Employer ROI Analysis", "Facility Revenue Impact", "Network Capacity Planner"],
+            "color": "#e8f8fd",
+            "nav_key": "Week 8: Fitness Passport"
         },
     ]
 
@@ -193,7 +208,7 @@ if week_selection == "🏠 Home":
                 for t in mod["tools"]
             )
             st.markdown(f"""
-            <div style="background:{mod['color']}; border-radius:12px; padding:18px 20px; margin-bottom:16px;
+            <div style="background:{mod['color']}; border-radius:12px; padding:18px 20px; margin-bottom:4px;
                         border:1px solid #ddd; min-height:170px;">
                 <div style="font-size:1.6em;">{mod['icon']}</div>
                 <div style="font-size:0.8em; color:#888; font-weight:600; letter-spacing:0.05em; margin-top:2px;">
@@ -206,6 +221,9 @@ if week_selection == "🏠 Home":
                 <div>{tools_html}</div>
             </div>
             """, unsafe_allow_html=True)
+            if st.button(f"Open {mod['week']} →", key=f"nav_{mod['nav_key']}", use_container_width=True):
+                st.session_state["module"] = mod["nav_key"]
+                st.rerun()
 
     st.markdown("<hr style='margin:24px 0; border:none; border-top:2px solid #e0e0e0;'>", unsafe_allow_html=True)
 
@@ -236,7 +254,7 @@ if week_selection == "🏠 Home":
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.info("**Tip:** Use the sidebar dropdown to jump directly to any week's calculators.")
+    st.info("**Tip:** Click **Open Week X →** on any card, or use the sidebar dropdown, to jump directly to a module.")
 
 # ==========================================
 # WEEK 1: PROCESS FUNDAMENTALS
@@ -1738,359 +1756,429 @@ elif week_selection == "Week 7: Manish & Adele Wedding":
 elif week_selection == "Week 8: Fitness Passport":
     st.header("Week 8: Fitness Passport 🏃")
     st.markdown("""
-    Apply **Operations Management** principles to your personal fitness journey.
-    Track passport completion, calculate calorie burn, analyse gym capacity, and plan your training load.
+    **[Fitness Passport](https://www.fitnesspassport.com.au/about/)** is an Australian corporate wellness
+    platform that gives employees and their families affordable, unlimited access to 1,700+ gyms, pools,
+    and fitness facilities across Australia — at up to **50% off** regular gym prices.
+
+    This module analyses the Fitness Passport **business model** through an Operations Management lens:
+    member value, employer ROI, facility revenue impact, and network capacity planning.
     """)
 
     tab1, tab2, tab3, tab4 = st.tabs([
-        "🗺️ Passport Progress",
-        "🔥 Calorie & MET",
-        "🏋️ Gym Capacity & Flow",
-        "📈 Training Load & Recovery"
+        "💳 Member Value Calculator",
+        "🏢 Employer ROI Analysis",
+        "🏋️ Facility Revenue Impact",
+        "🗺️ Network Capacity Planner"
     ])
 
-    # ── TAB 1: PASSPORT PROGRESS TRACKER ──────────────────────────────────────
+    # ── TAB 1: MEMBER VALUE CALCULATOR ────────────────────────────────────────
     with tab1:
-        st.subheader("Fitness Passport Progress Tracker")
-        st.markdown(
-            "A **Fitness Passport** awards a stamp for each unique activity you complete. "
-            "Track your stamps below to see how close you are to finishing the passport."
-        )
-        st.latex(r"\text{Completion \%} = \frac{\text{Stamps Earned}}{\text{Total Stamps Required}} \times 100")
+        st.subheader("Member Value Calculator")
+        st.markdown("""
+        Fitness Passport operates on a **fortnightly direct-debit** model with two tiers and two membership types.
+        This calculator helps a prospective member compare their Fitness Passport cost against regular gym
+        membership and work out how many visits are needed to break even.
+
+        > **Key stats:** Members save up to **50% off** regular gym prices. On average members
+        > increase physical activity by **157%** (from 2.5 → 3.9 days/week).
+        """)
 
         st.divider()
+        st.markdown("#### Step 1 — Choose Your Membership")
 
-        col_a, col_b = st.columns(2)
-        with col_a:
-            total_required = st.number_input("Total Stamps Required", min_value=1, value=10, step=1)
-        with col_b:
-            stamps_earned = st.number_input("Stamps Earned So Far", min_value=0, value=0, step=1)
-
-        stamps_earned = min(stamps_earned, total_required)
-        stamps_remaining = total_required - stamps_earned
-        completion_pct = (stamps_earned / total_required) * 100
-
-        st.divider()
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Stamps Earned", f"{int(stamps_earned)}")
-        c2.metric("Stamps Remaining", f"{int(stamps_remaining)}")
-        c3.metric("Completion", f"{completion_pct:.1f}%")
-
-        st.progress(completion_pct / 100)
-
-        st.divider()
-        st.markdown("#### Activity Planner")
-        st.markdown("Plan how many activities per week you need to finish the passport by your deadline.")
-
-        col_c, col_d = st.columns(2)
-        with col_c:
-            weeks_left = st.number_input("Weeks Remaining", min_value=1, value=4, step=1)
-        with col_d:
-            activities_per_week = math.ceil(stamps_remaining / weeks_left) if weeks_left > 0 else stamps_remaining
-
-        st.info(
-            f"To complete your passport in **{int(weeks_left)} week(s)** you need at least "
-            f"**{activities_per_week} activity/activities per week**."
-        )
-
-        if completion_pct == 100:
-            st.success("Passport complete! Great work — all stamps collected.")
-        elif completion_pct >= 75:
-            st.success(f"Almost there! You're {completion_pct:.0f}% done. Keep pushing!")
-        elif completion_pct >= 50:
-            st.warning(f"Halfway through at {completion_pct:.0f}%. Maintain momentum.")
-        else:
-            st.error(f"Only {completion_pct:.0f}% complete. Ramp up your activity pace.")
-
-        st.divider()
-        st.markdown("#### Activity Log")
-        activities_list = [
-            "Running / Jogging", "Cycling", "Swimming", "Weight Training",
-            "Yoga / Pilates", "Group Fitness Class", "Rock Climbing",
-            "Rowing / Kayaking", "HIIT / Circuit Training", "Walking (Brisk)",
-            "Sport (Basketball, Soccer, etc.)", "Dance Class", "Other"
-        ]
-        selected_activities = st.multiselect(
-            "Select activities you have completed (each counts as one stamp):",
-            activities_list
-        )
-        if selected_activities:
-            logged_count = len(selected_activities)
-            st.success(f"**{logged_count}** stamp(s) logged: {', '.join(selected_activities)}")
-            if logged_count > stamps_remaining:
-                st.warning("You have logged more activities than stamps remaining. Only stamps up to the required total count.")
-
-    # ── TAB 2: CALORIE & MET CALCULATOR ───────────────────────────────────────
-    with tab2:
-        st.subheader("Calorie Burn & MET Calculator")
-        st.markdown(
-            "The **Metabolic Equivalent of Task (MET)** measures exercise intensity. "
-            "Combined with body weight and duration, it gives an accurate calorie estimate."
-        )
-        st.latex(r"\text{Calories} = \text{MET} \times \text{Weight (kg)} \times \text{Duration (hrs)}")
-
-        st.divider()
-
-        met_activities = {
-            "Walking (3.5 mph)": 3.5,
-            "Walking (brisk, 4 mph)": 4.3,
-            "Running (5 mph / 12 min mile)": 8.3,
-            "Running (6 mph / 10 min mile)": 9.8,
-            "Running (7.5 mph / 8 min mile)": 11.8,
-            "Cycling (light, <10 mph)": 4.0,
-            "Cycling (moderate, 12–14 mph)": 8.0,
-            "Cycling (vigorous, >16 mph)": 10.0,
-            "Swimming (light)": 5.8,
-            "Swimming (vigorous)": 9.8,
-            "Weight Training (general)": 3.5,
-            "Weight Training (vigorous)": 6.0,
-            "HIIT / Circuit Training": 8.0,
-            "Yoga": 2.5,
-            "Pilates": 3.0,
-            "Group Fitness Class": 5.0,
-            "Rock Climbing": 7.5,
-            "Rowing (moderate)": 7.0,
-            "Basketball": 6.5,
-            "Soccer": 7.0,
-            "Dance Class": 5.5,
-            "Custom (enter MET below)": None,
-        }
-
-        col_x, col_y = st.columns(2)
-        with col_x:
-            activity_choice = st.selectbox("Select Activity", list(met_activities.keys()))
-        with col_y:
-            body_weight_kg = st.number_input("Body Weight (kg)", min_value=30.0, max_value=250.0, value=70.0, step=0.5)
-
-        if met_activities[activity_choice] is None:
-            met_value = st.number_input("Custom MET Value", min_value=1.0, max_value=23.0, value=5.0, step=0.1)
-        else:
-            met_value = met_activities[activity_choice]
-            st.info(f"MET for **{activity_choice}**: {met_value}")
-
-        col_dur, col_unit = st.columns(2)
-        with col_dur:
-            duration_val = st.number_input("Duration", min_value=1.0, value=30.0, step=1.0)
-        with col_unit:
-            duration_unit = st.selectbox("Unit", ["Minutes", "Hours", "Seconds"])
-
-        if duration_unit == "Minutes":
-            duration_hrs = duration_val / 60
-        elif duration_unit == "Seconds":
-            duration_hrs = duration_val / 3600
-        else:
-            duration_hrs = duration_val
-
-        calories = met_value * body_weight_kg * duration_hrs
-
-        st.divider()
-        c1, c2, c3 = st.columns(3)
-        c1.metric("MET Value", f"{met_value}")
-        c2.metric("Duration", f"{duration_hrs * 60:.1f} min")
-        c3.metric("Calories Burned", f"{calories:.0f} kcal")
-
-        st.divider()
-        st.markdown("#### Weekly Calorie Goal Planner")
-        weekly_goal = st.number_input("Weekly Calorie Burn Goal (kcal)", min_value=100, value=2000, step=100)
-        sessions_needed = math.ceil(weekly_goal / calories) if calories > 0 else 0
-        st.info(
-            f"At **{calories:.0f} kcal per session**, you need **{sessions_needed} session(s) per week** "
-            f"to reach your goal of **{weekly_goal} kcal**."
-        )
-
-        progress_pct = min(calories / (weekly_goal / 7), 1.0)
-        st.markdown(f"**Daily calorie target progress (single session vs. daily share of weekly goal):**")
-        st.progress(progress_pct)
-
-    # ── TAB 3: GYM CAPACITY & FLOW ────────────────────────────────────────────
-    with tab3:
-        st.subheader("Gym Capacity & Flow Analysis")
-        st.markdown(
-            "Apply **Little's Law** and **utilisation** concepts to a fitness centre to identify "
-            "peak-hour bottlenecks and optimal staffing."
-        )
-
-        st.markdown("#### Little's Law: Average Members in the Gym")
-        st.latex(r"L = \lambda \times W")
-        st.markdown("where **L** = avg members in gym, **λ** = arrival rate (members/min), **W** = avg time spent (min)")
-
-        st.divider()
-        c_lbl, c_eq, c_lam, c_x, c_w = st.columns([1.5, 0.3, 2, 0.3, 2])
-        with c_lbl:
-            formula_label("Avg Members (L)")
-        with c_eq:
-            formula_op("=")
-        with c_lam:
-            arrival_rate_gym = st.number_input("Arrival Rate λ (members/min)", min_value=0.1, value=2.0, step=0.1)
-        with c_x:
-            formula_op("×")
-        with c_w:
-            avg_time_gym = st.number_input("Avg Time in Gym W (min)", min_value=1.0, value=60.0, step=5.0)
-
-        L_gym = arrival_rate_gym * avg_time_gym
-        st.divider()
-        st.metric("Average Members in Gym at Any Time (L)", f"{L_gym:.1f}")
-
-        st.divider()
-        st.markdown("#### Utilisation & Capacity")
-        st.latex(r"\text{Utilisation} = \frac{\lambda}{\mu \times m}")
-        st.markdown("where **μ** = capacity per station per minute, **m** = number of stations")
-
-        col_mu, col_m = st.columns(2)
-        with col_mu:
-            station_capacity = st.number_input(
-                "Station Service Rate μ (members/min per station)", min_value=0.01, value=0.5, step=0.01,
-                help="e.g. 0.5 means each station can serve 0.5 members/min (i.e. one member every 2 min)"
+        col_tier, col_type = st.columns(2)
+        with col_tier:
+            tier = st.selectbox(
+                "Membership Tier",
+                ["Silver (~865 facilities, NSW/ACT)", "Gold (~1,700+ facilities, Australia-wide)"],
+                help="Silver covers NSW/ACT; Gold covers all states including interstate travel."
             )
-        with col_m:
-            num_stations = st.number_input("Number of Stations / Equipment m", min_value=1, value=10, step=1)
+        with col_type:
+            mem_type = st.selectbox("Membership Type", ["Single", "Family (2 adults + dependants)"])
 
-        total_capacity_gym = station_capacity * num_stations
-        utilisation_gym = arrival_rate_gym / total_capacity_gym if total_capacity_gym > 0 else float("inf")
+        # Reference weekly prices (approximate 2024 NSW Health rates)
+        tier_prices = {
+            ("Silver (~865 facilities, NSW/ACT)", "Single"): 15.95,
+            ("Silver (~865 facilities, NSW/ACT)", "Family (2 adults + dependants)"): 25.95,
+            ("Gold (~1,700+ facilities, Australia-wide)", "Single"): 18.60,
+            ("Gold (~1,700+ facilities, Australia-wide)", "Family (2 adults + dependants)"): 33.90,
+        }
+        fp_weekly = tier_prices[(tier, mem_type)]
+        fp_fortnightly = fp_weekly * 2
+        fp_annual = fp_weekly * 52
+
+        st.info(
+            f"Approximate Fitness Passport cost: **${fp_weekly:.2f}/week** "
+            f"(${fp_fortnightly:.2f} per fortnight, ${fp_annual:.0f}/year). "
+            f"*Actual price set by your employer — confirm with HR.*"
+        )
+
+        st.divider()
+        st.markdown("#### Step 2 — Enter Your Alternative Gym Costs")
+
+        col_gym1, col_gym2 = st.columns(2)
+        with col_gym1:
+            alt_gym_weekly = st.number_input(
+                "Regular gym weekly cost ($/week)",
+                min_value=0.0, value=30.0, step=1.0,
+                help="e.g. Anytime Fitness ≈ $22–30/wk, F45 ≈ $55–65/wk"
+            )
+        with col_gym2:
+            num_gyms_needed = st.number_input(
+                "How many different gym/pool types do you want access to?",
+                min_value=1, max_value=10, value=2, step=1,
+                help="Fitness Passport gives one price for ALL facilities. Enter how many you'd normally pay for separately."
+            )
+
+        alt_total_weekly = alt_gym_weekly * num_gyms_needed
+        alt_annual = alt_total_weekly * 52
+        savings_annual = alt_annual - fp_annual
+        savings_pct = (savings_annual / alt_annual * 100) if alt_annual > 0 else 0
+
+        st.divider()
+        st.markdown("#### Results")
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Fitness Passport (annual)", f"${fp_annual:,.0f}")
+        c2.metric("Alternative gym(s) (annual)", f"${alt_annual:,.0f}")
+        delta_str = f"${abs(savings_annual):,.0f} {'saved' if savings_annual > 0 else 'extra'}"
+        c3.metric("Annual Saving", delta_str, delta=f"{savings_pct:+.1f}%")
+
+        if savings_annual > 0:
+            st.success(
+                f"Fitness Passport saves you **${savings_annual:,.0f}/year ({savings_pct:.0f}%)** compared to "
+                f"{num_gyms_needed} separate gym membership(s) at ${alt_gym_weekly:.0f}/wk each."
+            )
+        elif savings_annual < 0:
+            st.warning(
+                f"Fitness Passport costs ${abs(savings_annual):,.0f}/year more than a single ${alt_gym_weekly:.0f}/wk gym. "
+                f"Value improves significantly if you access **multiple facilities**."
+            )
+        else:
+            st.info("Costs are equal — Fitness Passport adds value through facility variety and flexibility.")
+
+        st.divider()
+        st.markdown("#### Break-Even: Cost Per Visit")
+        st.latex(r"\text{Cost per visit} = \frac{\text{Annual FP Cost}}{\text{Total Annual Visits}}")
+
+        visits_per_week = st.slider("Visits per week (across any FP facility)", min_value=1, max_value=14, value=3)
+        total_visits = visits_per_week * 52
+        cost_per_visit = fp_annual / total_visits
+
+        # What a casual gym visit typically costs
+        casual_rate = 15.0
+        col_bev1, col_bev2, col_bev3 = st.columns(3)
+        col_bev1.metric("Total Annual Visits", f"{total_visits}")
+        col_bev2.metric("Your Cost per Visit", f"${cost_per_visit:.2f}")
+        col_bev3.metric("Typical Casual Rate", f"~${casual_rate:.0f}")
+
+        breakeven_visits = math.ceil(fp_annual / casual_rate)
+        breakeven_visits_per_week = breakeven_visits / 52
+        st.info(
+            f"To beat a ${casual_rate:.0f} casual rate you need at least **{breakeven_visits} visits/year "
+            f"({breakeven_visits_per_week:.1f}/week)**."
+        )
+
+    # ── TAB 2: EMPLOYER ROI ANALYSIS ──────────────────────────────────────────
+    with tab2:
+        st.subheader("Employer ROI Analysis")
+        st.markdown("""
+        Fitness Passport is a **self-funded employee benefit** — employees pay the fortnightly fee directly —
+        so the financial cost to employers is primarily **administrative**. The return comes through
+        measurable workforce outcomes.
+
+        > **Evidence base (Fitness Passport data):**
+        > - **42%** of members are influenced to stay at their employer
+        > - **36%** would not accept a role at a company that doesn't offer Fitness Passport
+        > - Members increase weekly activity by **157%** on average
+        """)
+
+        st.divider()
+        st.markdown("#### Workforce Inputs")
+
+        col_e1, col_e2 = st.columns(2)
+        with col_e1:
+            total_employees = st.number_input("Total employees", min_value=10, value=500, step=10)
+            participation_rate = st.slider("Expected FP participation rate (%)", 5, 80, 20) / 100
+        with col_e2:
+            avg_salary = st.number_input("Average annual salary (AUD $)", min_value=40000, value=85000, step=5000)
+            current_turnover_rate = st.slider("Current annual staff turnover rate (%)", 5, 50, 15) / 100
+
+        fp_members = int(total_employees * participation_rate)
+        fp_admin_cost = fp_members * 50  # ~$50/member/yr estimated admin (conservative)
+
+        st.divider()
+        st.markdown("#### Retention Impact")
+        st.latex(r"\text{Retained employees} = \text{FP members} \times 0.42")
+
+        employees_influenced_to_stay = fp_members * 0.42
+        # Turnover saved = influenced × fraction that would have left
+        turnovers_prevented = employees_influenced_to_stay * current_turnover_rate
+        # Cost to replace an employee ≈ 50% of annual salary (conservative)
+        replacement_cost_pct = st.slider("Cost to replace one employee (% of annual salary)", 25, 150, 50) / 100
+        replacement_cost_per_head = avg_salary * replacement_cost_pct
+        retention_saving = turnovers_prevented * replacement_cost_per_head
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("FP Members in Workforce", f"{fp_members:,}")
+        c2.metric("Employees Influenced to Stay", f"{employees_influenced_to_stay:.0f}")
+        c3.metric("Estimated Turnovers Prevented", f"{turnovers_prevented:.1f}")
+
+        st.divider()
+        st.markdown("#### Productivity & Wellbeing Impact")
+        st.markdown(
+            "A **157% increase in activity** correlates with reduced absenteeism and higher productivity. "
+            "A conservative estimate: each active member saves 1 sick day per year."
+        )
+
+        sick_days_saved = fp_members * 1.0
+        daily_salary = avg_salary / 250
+        productivity_saving = sick_days_saved * daily_salary
 
         c1, c2 = st.columns(2)
-        c1.metric("Total Gym Capacity (μ × m)", f"{total_capacity_gym:.2f} members/min")
-        c2.metric("Utilisation", f"{utilisation_gym:.1%}")
-
-        if utilisation_gym >= 1.0:
-            st.error(
-                f"Utilisation is {utilisation_gym:.1%} — the gym cannot handle this arrival rate! "
-                "Add equipment/stations or stagger membership access."
-            )
-        elif utilisation_gym > 0.85:
-            st.warning(f"High utilisation ({utilisation_gym:.1%}). Expect queues during peak hours.")
-        else:
-            st.success(f"Gym is operating at {utilisation_gym:.1%} utilisation — comfortable capacity.")
+        c1.metric("Sick Days Saved (est.)", f"{sick_days_saved:.0f} days")
+        c2.metric("Productivity Value", f"${productivity_saving:,.0f}")
 
         st.divider()
-        st.markdown("#### Queue Wait Time (M/M/1 Approximation)")
-        st.latex(r"W_q = \frac{\rho}{\mu \cdot (1 - \rho)}")
+        st.markdown("#### Total Employer ROI")
+        st.latex(r"\text{ROI} = \frac{\text{Total Benefit} - \text{Admin Cost}}{\text{Admin Cost}} \times 100")
 
-        if utilisation_gym < 1.0:
-            rho_gym = utilisation_gym
-            service_time_gym = 1 / station_capacity if station_capacity > 0 else 0
-            Wq_gym = (rho_gym * service_time_gym) / (1 - rho_gym)
-            W_total_gym = Wq_gym + service_time_gym
-            Lq_gym = arrival_rate_gym * Wq_gym
-
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Avg Wait in Queue (Wq)", f"{Wq_gym:.2f} min")
-            c2.metric("Avg Time in System (W)", f"{W_total_gym:.2f} min")
-            c3.metric("Avg Members in Queue (Lq)", f"{Lq_gym:.1f}")
-        else:
-            st.error("Cannot compute queue — utilisation ≥ 100%. Queue grows without bound.")
-
-        st.divider()
-        st.markdown("#### Peak-Hour Planning")
-        peak_multiplier = st.slider("Peak-Hour Multiplier (vs. average)", min_value=1.0, max_value=5.0, value=2.0, step=0.1)
-        peak_arrival = arrival_rate_gym * peak_multiplier
-        peak_util = peak_arrival / total_capacity_gym if total_capacity_gym > 0 else float("inf")
-        st.info(
-            f"At peak hours (×{peak_multiplier:.1f} arrivals = **{peak_arrival:.2f} members/min**), "
-            f"utilisation rises to **{peak_util:.1%}**."
-        )
-        if peak_util >= 1.0:
-            stations_needed = math.ceil(peak_arrival / station_capacity)
-            st.warning(
-                f"Peak utilisation exceeds 100%. You need at least **{stations_needed} stations** "
-                f"to handle peak demand."
-            )
-
-    # ── TAB 4: TRAINING LOAD & RECOVERY ───────────────────────────────────────
-    with tab4:
-        st.subheader("Training Load & Recovery Planner")
-        st.markdown(
-            "**Training Load** (Arbitrary Units) combines session intensity and duration. "
-            "Use this planner to balance stress and recovery across your training week."
-        )
-        st.latex(r"\text{Training Load (AU)} = \text{RPE} \times \text{Duration (min)}")
-        st.markdown(
-            "**RPE** = Rate of Perceived Exertion (1–10 scale). "
-            "Session load is RPE × duration. Weekly load is the sum of all sessions."
-        )
-
-        st.divider()
-        st.markdown("#### Weekly Session Planner")
-
-        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        rpe_values = []
-        duration_values = []
-
-        cols_days = st.columns(7)
-        for i, day in enumerate(days):
-            with cols_days[i]:
-                st.markdown(f"**{day[:3]}**")
-                rpe = st.number_input(f"RPE ({day[:3]})", min_value=0, max_value=10, value=0, step=1, key=f"rpe_{day}")
-                dur = st.number_input(f"Min ({day[:3]})", min_value=0, max_value=300, value=0, step=5, key=f"dur_{day}")
-                rpe_values.append(rpe)
-                duration_values.append(dur)
-
-        session_loads = [r * d for r, d in zip(rpe_values, duration_values)]
-        weekly_load = sum(session_loads)
-        active_days = sum(1 for d in duration_values if d > 0)
-        rest_days = 7 - active_days
-
-        st.divider()
-        load_data = pd.DataFrame({
-            "Day": days,
-            "RPE": rpe_values,
-            "Duration (min)": duration_values,
-            "Session Load (AU)": session_loads
-        })
-        st.dataframe(load_data, use_container_width=True, hide_index=True)
+        total_benefit = retention_saving + productivity_saving
+        net_benefit = total_benefit - fp_admin_cost
+        roi = (net_benefit / fp_admin_cost * 100) if fp_admin_cost > 0 else 0
 
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Total Weekly Load (AU)", f"{weekly_load}")
-        c2.metric("Active Days", f"{active_days}")
-        c3.metric("Rest Days", f"{rest_days}")
-        avg_load = weekly_load / active_days if active_days > 0 else 0
-        c4.metric("Avg Session Load (AU)", f"{avg_load:.0f}")
+        c1.metric("Retention Saving", f"${retention_saving:,.0f}")
+        c2.metric("Productivity Saving", f"${productivity_saving:,.0f}")
+        c3.metric("Estimated Admin Cost", f"${fp_admin_cost:,.0f}")
+        c4.metric("ROI", f"{roi:.0f}%")
 
-        st.divider()
-        st.markdown("#### Load Intensity Classification")
-        if weekly_load == 0:
-            st.info("Enter sessions above to see your training load assessment.")
-        elif weekly_load < 1000:
-            st.success(f"Weekly load of **{weekly_load} AU** is **Low** — good for recovery or beginners.")
-        elif weekly_load < 2000:
-            st.success(f"Weekly load of **{weekly_load} AU** is **Moderate** — balanced training stimulus.")
-        elif weekly_load < 3000:
-            st.warning(f"Weekly load of **{weekly_load} AU** is **High** — ensure adequate recovery.")
+        if roi > 500:
+            st.success(
+                f"Exceptional ROI of **{roi:.0f}%** — for every $1 of admin spend, "
+                f"the organisation earns ~${roi/100:.0f} in workforce value."
+            )
+        elif roi > 100:
+            st.success(f"Strong positive ROI of **{roi:.0f}%**. The program more than pays for itself.")
+        elif roi > 0:
+            st.warning(f"Positive but modest ROI of **{roi:.0f}%**. Increasing participation rate improves returns.")
         else:
-            st.error(f"Weekly load of **{weekly_load} AU** is **Very High** — risk of overtraining. Consider reducing volume or intensity.")
+            st.error(f"Negative ROI at current participation. Increase participation or reduce admin overhead.")
+
+    # ── TAB 3: FACILITY REVENUE IMPACT ────────────────────────────────────────
+    with tab3:
+        st.subheader("Facility Revenue Impact (Partner Perspective)")
+        st.markdown("""
+        Fitness Passport describes itself as a **"third-stream income"** vehicle for partner facilities —
+        driving incremental foot traffic at no marketing cost. This calculator estimates the additional
+        revenue and utilisation impact of joining the Fitness Passport network.
+        """)
 
         st.divider()
-        st.markdown("#### Acute : Chronic Workload Ratio (ACWR)")
-        st.latex(r"\text{ACWR} = \frac{\text{Acute Load (last 7 days)}}{\text{Chronic Load (28-day average)}}")
+        st.markdown("#### Baseline Facility Metrics")
+
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            base_members = st.number_input("Current paid members", min_value=0, value=800, step=50)
+            base_casual_visits_day = st.number_input("Avg casual visits per day (non-members)", min_value=0, value=20, step=5)
+        with col_f2:
+            avg_member_fee_pw = st.number_input("Average member fee ($/week)", min_value=5.0, value=22.0, step=1.0)
+            avg_casual_fee = st.number_input("Casual visit fee ($)", min_value=1.0, value=15.0, step=0.5)
+
+        base_weekly_revenue = (base_members * avg_member_fee_pw) + (base_casual_visits_day * 7 * avg_casual_fee)
+
+        st.metric("Baseline Weekly Revenue", f"${base_weekly_revenue:,.0f}")
+
+        st.divider()
+        st.markdown("#### Fitness Passport Impact")
         st.markdown(
-            "An ACWR between **0.8 – 1.3** is the 'sweet spot' for performance with low injury risk."
+            "Partner facilities receive a **per-visit fee** from Fitness Passport for each FP member visit. "
+            "FP absorbs the marketing cost — the facility simply receives visits."
         )
 
-        col_ac, col_ch = st.columns(2)
-        with col_ac:
-            acute_load = st.number_input("Acute Load (last 7 days, AU)", min_value=0, value=int(weekly_load), step=50)
-        with col_ch:
-            chronic_load = st.number_input("Chronic Load (4-week avg per week, AU)", min_value=1, value=max(1, int(weekly_load)), step=50)
+        col_fp1, col_fp2 = st.columns(2)
+        with col_fp1:
+            fp_new_visits_day = st.number_input(
+                "Estimated new FP member visits per day",
+                min_value=0, value=30, step=5,
+                help="Conservative starting estimate for a mid-sized gym joining FP network."
+            )
+            fp_per_visit_rate = st.number_input(
+                "FP per-visit payment to facility ($)",
+                min_value=1.0, value=8.0, step=0.5,
+                help="Negotiated rate. Typically lower than casual but volume compensates."
+            )
+        with col_fp2:
+            fp_secondary_spend = st.number_input(
+                "Avg secondary spend per FP visit (café, PT, retail $)",
+                min_value=0.0, value=3.0, step=0.5,
+                help="FP members may buy smoothies, book PT sessions, or buy merchandise."
+            )
+            fp_conversion_pct = st.slider(
+                "% of FP visitors converting to full members over 12 months", 0, 30, 5
+            ) / 100
 
-        acwr = acute_load / chronic_load if chronic_load > 0 else 0
-        c1, c2 = st.columns(2)
-        c1.metric("ACWR", f"{acwr:.2f}")
-        if acwr == 0:
-            c2.info("Enter load values above.")
-        elif acwr < 0.8:
-            c2.warning("ACWR below 0.8 — undertraining or detraining risk.")
-        elif acwr <= 1.3:
-            c2.success("ACWR in the sweet spot (0.8–1.3). Great training balance!")
-        else:
-            c2.error(f"ACWR of {acwr:.2f} is high (>1.3) — elevated injury risk. Reduce load this week.")
+        fp_weekly_visit_revenue = fp_new_visits_day * 7 * fp_per_visit_rate
+        fp_weekly_secondary = fp_new_visits_day * 7 * fp_secondary_spend
+        fp_annual_visits = fp_new_visits_day * 365
+        fp_converts = int(fp_annual_visits * fp_conversion_pct / 52)  # per week equivalent
+        fp_conversion_revenue_pw = fp_converts * avg_member_fee_pw
+
+        fp_total_weekly_additional = fp_weekly_visit_revenue + fp_weekly_secondary + fp_conversion_revenue_pw
+        new_weekly_revenue = base_weekly_revenue + fp_total_weekly_additional
+        revenue_uplift_pct = (fp_total_weekly_additional / base_weekly_revenue * 100) if base_weekly_revenue > 0 else 0
 
         st.divider()
-        st.markdown("#### Recovery Time Estimator")
-        st.latex(r"\text{Recovery Hours} \approx \text{Session Load (AU)} \times 0.1")
-        st.markdown("Rule of thumb: every 10 AU of session load requires ~1 hour of recovery.")
-        max_session = max(session_loads) if session_loads else 0
-        recovery_hrs = max_session * 0.1
-        st.info(
-            f"Your hardest session this week has a load of **{max_session} AU**, "
-            f"suggesting ~**{recovery_hrs:.1f} hours** of recovery before the next hard effort."
+        c1, c2, c3 = st.columns(3)
+        c1.metric("FP Visit Revenue (weekly)", f"${fp_weekly_visit_revenue:,.0f}")
+        c2.metric("Secondary Spend (weekly)", f"${fp_weekly_secondary:,.0f}")
+        c3.metric("Conversion Revenue (weekly)", f"${fp_conversion_revenue_pw:,.0f}")
+
+        st.divider()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Total Weekly Revenue (with FP)", f"${new_weekly_revenue:,.0f}")
+        c2.metric("Additional Weekly Revenue", f"${fp_total_weekly_additional:,.0f}")
+        c3.metric("Revenue Uplift", f"{revenue_uplift_pct:.1f}%")
+
+        if revenue_uplift_pct > 15:
+            st.success(f"Significant revenue uplift of **{revenue_uplift_pct:.1f}%** — FP partnership is highly valuable.")
+        elif revenue_uplift_pct > 5:
+            st.success(f"Positive revenue uplift of **{revenue_uplift_pct:.1f}%** from FP. Grow visit volume to maximise returns.")
+        else:
+            st.warning(f"Revenue uplift of {revenue_uplift_pct:.1f}%. Negotiate a higher per-visit rate or target more FP visits.")
+
+        st.divider()
+        st.markdown("#### Capacity Utilisation Check (Little's Law)")
+        st.latex(r"L = \lambda \times W")
+        st.markdown("Ensure the facility can absorb the additional FP traffic without degrading member experience.")
+
+        col_cap1, col_cap2 = st.columns(2)
+        with col_cap1:
+            facility_capacity = st.number_input("Facility peak-hour capacity (persons)", min_value=10, value=150, step=10)
+            peak_hours_day = st.number_input("Peak hours per day", min_value=1, max_value=12, value=4, step=1)
+        with col_cap2:
+            avg_visit_duration_min = st.number_input("Average visit duration (min)", min_value=15, value=60, step=5)
+
+        # Distribute visits across peak (70%) and off-peak (30%)
+        peak_visits = (base_members * 0.3 + base_casual_visits_day * 0.7 + fp_new_visits_day * 0.6)
+        peak_arrival_rate = peak_visits / (peak_hours_day * 60)  # arrivals per minute
+        L_facility = peak_arrival_rate * avg_visit_duration_min
+        utilisation_facility = L_facility / facility_capacity
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Peak Arrival Rate", f"{peak_arrival_rate:.2f} persons/min")
+        c2.metric("Avg Persons on Floor (L)", f"{L_facility:.0f}")
+        c3.metric("Capacity Utilisation", f"{utilisation_facility:.1%}")
+
+        if utilisation_facility >= 1.0:
+            st.error(f"Facility at {utilisation_facility:.0%} utilisation — overcrowded! Stagger FP access times or expand capacity.")
+        elif utilisation_facility > 0.80:
+            st.warning(f"High utilisation at {utilisation_facility:.0%}. Consider time-of-day access restrictions for FP members.")
+        else:
+            st.success(f"Comfortable utilisation at {utilisation_facility:.0%}. Facility can handle FP partnership volume.")
+
+    # ── TAB 4: NETWORK CAPACITY PLANNER ───────────────────────────────────────
+    with tab4:
+        st.subheader("Network Capacity Planner")
+        st.markdown("""
+        Fitness Passport's **network of 1,700+ partner facilities** must collectively absorb demand from
+        all active members. This tab applies **system-level OM thinking** to the Fitness Passport network:
+        How many facilities are needed? How should they be distributed? What is the network's aggregate
+        service capacity?
+        """)
+
+        st.divider()
+        st.markdown("#### Network Demand Model")
+        st.latex(r"\lambda_{network} = N_{members} \times f_{visits}")
+        st.markdown(
+            "where **N_members** = total active FP members, **f_visits** = average visit frequency (visits/day)"
         )
+
+        col_n1, col_n2 = st.columns(2)
+        with col_n1:
+            total_fp_members = st.number_input(
+                "Total active FP members (Australia-wide)",
+                min_value=1000, value=200000, step=10000,
+                help="Fitness Passport serves large govt and corporate employers. Estimate based on 1,700+ facilities."
+            )
+            avg_visits_per_member_per_week = st.number_input(
+                "Avg visits per member per week",
+                min_value=0.5, max_value=14.0, value=3.9, step=0.1,
+                help="Post-FP membership average is 3.9 visits/week (up from 2.5 pre-membership)."
+            )
+        with col_n2:
+            total_facilities = st.number_input(
+                "Total partner facilities in network",
+                min_value=100, value=1700, step=50,
+                help="Fitness Passport currently has 1,700+ partner facilities Australia-wide."
+            )
+            avg_facility_capacity = st.number_input(
+                "Avg facility daily capacity (visits/day)",
+                min_value=50, value=300, step=25,
+                help="Accounts for peak and off-peak hours averaged over operating hours."
+            )
+
+        daily_demand = total_fp_members * (avg_visits_per_member_per_week / 7)
+        network_daily_capacity = total_facilities * avg_facility_capacity
+        network_utilisation = daily_demand / network_daily_capacity if network_daily_capacity > 0 else 0
+
+        st.divider()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Daily Visit Demand (network)", f"{daily_demand:,.0f} visits/day")
+        c2.metric("Network Daily Capacity", f"{network_daily_capacity:,.0f} visits/day")
+        c3.metric("Network Utilisation", f"{network_utilisation:.1%}")
+
+        if network_utilisation >= 0.90:
+            st.error(f"Network utilisation at {network_utilisation:.0%} — critically close to capacity. Recruit more facilities urgently.")
+        elif network_utilisation >= 0.70:
+            st.warning(f"Network utilisation at {network_utilisation:.0%}. Healthy but limited buffer for growth. Target new facility suburbs.")
+        else:
+            st.success(f"Network utilisation at {network_utilisation:.0%}. Ample capacity to onboard more members or absorb peak demand.")
+
+        st.divider()
+        st.markdown("#### Growth Scenario: New Member Intake")
+        new_member_growth = st.slider(
+            "New members added (% increase on current base)", 5, 100, 20
+        )
+        new_total_members = total_fp_members * (1 + new_member_growth / 100)
+        new_daily_demand = new_total_members * (avg_visits_per_member_per_week / 7)
+        new_utilisation = new_daily_demand / network_daily_capacity if network_daily_capacity > 0 else 0
+        facilities_needed = math.ceil(new_daily_demand / avg_facility_capacity)
+        additional_facilities = max(0, facilities_needed - total_facilities)
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("New Total Members", f"{new_total_members:,.0f}", delta=f"+{new_member_growth}%")
+        c2.metric("New Network Utilisation", f"{new_utilisation:.1%}")
+        c3.metric("Additional Facilities Needed", f"{additional_facilities:,}")
+
+        st.divider()
+        st.markdown("#### Geographic Coverage Model")
+        st.markdown(
+            "Fitness Passport's value depends on facilities being **close to where members live and work**. "
+            "Using a simple coverage model:"
+        )
+        st.latex(r"\text{Members per facility} = \frac{N_{members}}{N_{facilities}}")
+
+        members_per_facility = total_fp_members / total_facilities
+        target_mpf = st.number_input(
+            "Target maximum members per facility (service quality threshold)",
+            min_value=10, value=200, step=10,
+            help="Lower = better coverage and shorter queues at each facility."
+        )
+
+        c1, c2 = st.columns(2)
+        c1.metric("Current Members per Facility", f"{members_per_facility:.0f}")
+        c2.metric("Target Threshold", f"{target_mpf}")
+
+        if members_per_facility > target_mpf:
+            facilities_for_target = math.ceil(total_fp_members / target_mpf)
+            gap = facilities_for_target - total_facilities
+            st.warning(
+                f"Current ratio of {members_per_facility:.0f} members/facility exceeds your target of {target_mpf}. "
+                f"Need **{facilities_for_target:,} facilities** total — add {gap:,} more to the network."
+            )
+        else:
+            st.success(
+                f"Ratio of {members_per_facility:.0f} members/facility is within your target of {target_mpf}. "
+                f"Network coverage is adequate for current membership."
+            )
